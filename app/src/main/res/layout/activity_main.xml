@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<!--    android:paddingTop="?attr/actionBarSize">-->
+
+
+
+    <fragment
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:defaultNavHost="true"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:navGraph="@navigation/mobile_navigation" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/player_panel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/nav_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/player_panel_album_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <TextView
+            android:id="@+id/player_panel_song_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/player_panel_empty_title"
+            app:layout_constraintStart_toEndOf="@id/player_panel_album_image"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/player_panel_song_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/player_panel_empty_info_title"
+            app:layout_constraintStart_toEndOf="@id/player_panel_album_image"
+            app:layout_constraintTop_toTopOf="@id/player_panel_song_name"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="30dp"/>
+
+        <ProgressBar
+            android:id="@+id/player_panel_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:layout_gravity="center"
+            android:max="100"
+            android:progress="0"
+            app:layout_constraintTop_toBottomOf="@id/player_panel_album_image"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/player_panel_action_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            app:icon="@drawable/ic_play_circle_outline_black_24dp"
+            app:layout_constraintEnd_toStartOf="@id/player_panel_playlist_button"
+            app:layout_constraintBottom_toTopOf="@id/player_panel_progress_bar"
+            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+            />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/player_panel_playlist_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            app:icon="@drawable/ic_playlist_play_black_24dp"
+            app:layout_constraintBottom_toTopOf="@id/player_panel_progress_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
+            />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="0dp"
+        android:background="?android:attr/windowBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

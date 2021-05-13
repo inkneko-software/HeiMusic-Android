@@ -1,0 +1,21 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="HeiMusicLightTheme" parent="@style/Theme.MaterialComponents.Light">
+        <item name="colorPrimaryDark">@color/colorWhite</item>
+        <item name="actionBarStyle">@style/Custom.ActionBar</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+
+    <style name="Custom.ActionBar" parent="Widget.MaterialComponents.Light.ActionBar.Solid">
+        <item name="background">@color/colorWhite</item>
+    </style>
+
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">50dp</item>
+    </style>
+
+
+</resources>

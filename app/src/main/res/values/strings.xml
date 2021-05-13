@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">HeiMusic</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="play">播放</string>
+    <string name="player_panel_empty_title">墨猫音乐.</string>
+    <string name="player_panel_empty_info_title"> </string>
+</resources>
