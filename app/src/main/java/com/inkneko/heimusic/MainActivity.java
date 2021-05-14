@@ -1,9 +1,11 @@
 package com.inkneko.heimusic;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
@@ -14,6 +16,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -24,6 +27,7 @@ import com.inkneko.heimusic.service.MusicPlayController;
 import com.inkneko.heimusic.service.MusicPlayService;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.navigation.NavController;
@@ -58,6 +62,7 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        requestRead();
         //导航UI行为设定
         BottomNavigationView navView = findViewById(R.id.nav_view);
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
@@ -96,6 +101,7 @@ public class MainActivity extends AppCompatActivity  {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayService.MusicPlayServiceBinder binder = (MusicPlayService.MusicPlayServiceBinder)service;
             MainActivity.this.musicPlayService = binder.getService();
+            musicPlayService.setOnCompletionListener(onCompletionListener);
         }
 
         @Override
@@ -148,6 +154,7 @@ public class MainActivity extends AppCompatActivity  {
                     task.cancel();
                 }
             }catch (IllegalStateException ignored){}
+            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
         }
     };
 
@@ -157,7 +164,7 @@ public class MainActivity extends AppCompatActivity  {
     private Observer<MusicInfo> onMusicChangeRequestListener = new Observer<MusicInfo>() {
         @Override
         public void onChanged(MusicInfo musicInfo) {
-            if (musicInfo instanceof RemoteMusicInfo){
+            if (musicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
                 RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
                 new Thread(new Runnable() {
                     @Override
@@ -188,7 +195,7 @@ public class MainActivity extends AppCompatActivity  {
                     Log.e("music panel", "play remote datasource failed");
                     return;
                 }
-            }else {
+            }else { //否则是本地源
                 LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
                 songNameTextView.setText(localMusicInfo.getSongName());
                 songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
@@ -224,4 +231,59 @@ public class MainActivity extends AppCompatActivity  {
         }
     };
 
+
+    /**
+     * permission code
+     */
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+
+    /**
+     * requestPermissions and do something
+     *
+     */
+    public void requestRead() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+        } else {
+            readFile();
+        }
+    }
+
+    /**
+     * do you want to do
+     */
+    public void readFile() {
+        // do something
+    }
+
+    /**
+     * onRequestPermissionsResult
+     *
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                readFile();
+            } else {
+                // Permission Denied
+                Toast.makeText(MainActivity.this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    public class PermissionBase{
+
+    }
 }

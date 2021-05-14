@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">HeiMusic</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_home">本地音乐</string>
+    <string name="title_dashboard">我的</string>
+    <string name="title_notifications">发现音乐</string>
     <string name="play">播放</string>
     <string name="player_panel_empty_title">墨猫音乐.</string>
-    <string name="player_panel_empty_info_title"> </string>
+    <string name="player_panel_empty_info_title">HeiMusic for Android.</string>
 </resources>
