@@ -35,6 +35,7 @@ public class MusicPlayService extends Service {
     private MediaPlayer.OnCompletionListener onCompletionListener;
     private MediaPlayer mediaPlayer;
     private int currentDuration = -1;
+    private boolean prepared = false;
 
     /**
      * 通过url播放音乐，可以是file://或https://协议地址
@@ -49,11 +50,13 @@ public class MusicPlayService extends Service {
         }
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setDataSource(url);
+        prepared = false;
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mp.start();
                 currentDuration = mediaPlayer.getDuration();
+                prepared = true;
             }
         });
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -76,11 +79,13 @@ public class MusicPlayService extends Service {
         }
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setDataSource(context, uri);
+        prepared = false;
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mp.start();
                 currentDuration = mediaPlayer.getDuration();
+                prepared = true;
             }
         });
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -134,7 +139,10 @@ public class MusicPlayService extends Service {
      * @return 时长，如果获取失败返回-1
      */
     public int getDuration(){
-        return mediaPlayer.getDuration();
+        if (prepared){
+            return mediaPlayer.getDuration();
+        }
+        return -1;
     }
 
     /**
@@ -142,9 +150,11 @@ public class MusicPlayService extends Service {
      * @return 播放位置，如果获取失败返回-1
      */
     public int getCurrentPosition(){
-        return mediaPlayer.getCurrentPosition();
+        if (prepared){
+            return mediaPlayer.getCurrentPosition();
+        }
+        return -1;
     }
-
 
     /**
      * 服务binder
