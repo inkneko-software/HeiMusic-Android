@@ -28,10 +28,13 @@ public class MusicBriefAdapter extends BaseAdapter {
     private OkHttpClient httpClient;
     private Context context;
     List<MusicInfo> musicInfoList;
+    private Bitmap defaultAlbumArt;
+
     public MusicBriefAdapter(Context context, List<MusicInfo> musicInfoList){
         this.context = context;
         this.musicInfoList = musicInfoList;
         httpClient = new OkHttpClient();
+        defaultAlbumArt = BitmapFactory.decodeResource(context.getResources(), R.drawable.default_albumart);
     }
     @Override
     public int getCount() {
@@ -45,6 +48,7 @@ public class MusicBriefAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
+        //TODO: 返回unique id以进行性能优化
         return position;
     }
 
@@ -64,9 +68,14 @@ public class MusicBriefAdapter extends BaseAdapter {
         MusicInfo musicInfo = musicInfoList.get(position);
         if (musicInfo instanceof LocalMusicInfo){
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
-            viewHolder.albumArt.setImageBitmap(localMusicInfo.getAlbumArtBitmap());
             viewHolder.songname.setText(localMusicInfo.getSongName());
             viewHolder.songinfo.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
+            Bitmap bitmap = localMusicInfo.getAlbumArtBitmap();
+            if (bitmap == null){
+                bitmap = defaultAlbumArt;
+            }
+            viewHolder.albumArt.setImageBitmap(bitmap);
+
         }else{
             RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
             ImageView albumArt = viewHolder.albumArt;
