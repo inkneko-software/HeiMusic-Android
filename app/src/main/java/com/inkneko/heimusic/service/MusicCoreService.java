@@ -397,7 +397,17 @@ public class MusicCoreService extends Service {
     private class NotifyProgressTask extends TimerTask{
         @Override
         public void run() {
-            notifyPositionChanged(mediaPlayer.getCurrentPosition(), mediaPlayer.getDuration());
+            if (prepared){
+                int position = mediaPlayer.getCurrentPosition();
+                int duration = mediaPlayer.getDuration();
+                if (position == -1){
+                    position = 0;
+                }
+                if (duration == -1){
+                    duration = 0;
+                }
+                notifyPositionChanged(position, duration);
+            }
         }
     };
 
