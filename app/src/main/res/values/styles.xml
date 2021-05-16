@@ -1,16 +1,39 @@
 <resources>
 
-    <!-- Base application theme. -->
     <style name="HeiMusicLightTheme" parent="@style/Theme.MaterialComponents.Light">
         <item name="colorPrimaryDark">@color/colorWhite</item>
-        <item name="actionBarStyle">@style/Custom.ActionBar</item>
+        <item name="actionBarStyle">@style/HeiMusicLightTheme.ActionBar</item>
+        <!-- 设置statusBarColor 为透明-->
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
-
-    <style name="Custom.ActionBar" parent="Widget.MaterialComponents.Light.ActionBar.Solid">
+    <style name="HeiMusicLightTheme.ActionBar" parent="Widget.MaterialComponents.Light.ActionBar.Solid">
         <item name="background">@color/colorWhite</item>
     </style>
+
+    <style name="HeiMusicLightTheme.NoActionBar" parent="HeiMusicLightTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+
+    <style name="HeiMusicDarkTheme" parent="@style/Theme.MaterialComponents">
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- 设置statusBarColor 为透明-->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="HeiMusicDarkTheme.NoActionBar" parent="HeiMusicDarkTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="HeiMusicDarkTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="HeiMusicDarkTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+
 
     <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
         <item name="cornerFamily">cut</item>
@@ -18,4 +41,13 @@
     </style>
 
 
+    <style name="MusicDetailPanelButtonStyle" parent="@style/Widget.MaterialComponents.Button.TextButton.Icon">
+        <item name="iconTint">@color/colorWhite</item>
+        <item name="android:layout_margin">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="iconPadding">0dp</item>
+    </style>
+
+    <style name="MusicDetailPanelButtonStyle.ActionButton" parent="MusicDetailPanelButtonStyle">
+    </style>
 </resources>

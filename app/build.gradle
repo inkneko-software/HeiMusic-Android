@@ -42,4 +42,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation("com.squareup.okhttp3:okhttp:4.7.2")
+    //for MusicDetailActivity's background blur effect
+    //https://github.com/wasabeef/Blurry
+    implementation("jp.wasabeef:blurry:3.0.0")
 }

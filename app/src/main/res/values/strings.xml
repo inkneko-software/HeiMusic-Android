@@ -6,4 +6,6 @@
     <string name="play">播放</string>
     <string name="player_panel_empty_title">墨猫音乐.</string>
     <string name="player_panel_empty_info_title">HeiMusic for Android.</string>
+    <string name="title_activity_music_detail">MusicDetailActivity</string>
+    <string name="unknow_audio_duration">--:--</string>
 </resources>

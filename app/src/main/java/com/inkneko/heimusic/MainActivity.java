@@ -1,11 +1,9 @@
 package com.inkneko.heimusic;
 
-import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
@@ -16,7 +14,6 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -24,10 +21,9 @@ import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 import com.inkneko.heimusic.service.MusicPlayController;
-import com.inkneko.heimusic.service.MusicPlayService;
+import com.inkneko.heimusic.service.MusicCoreService;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.navigation.NavController;
@@ -43,17 +39,20 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 public class MainActivity extends AppCompatActivity  {
-    private MusicPlayService musicPlayService;
+    private MusicCoreService musicCoreService;
     private boolean noSongDataSource = true;
     private boolean paused = true;
     private int lastPausePosition = 0;
 
+    private MusicInfo musicInfo;
     MaterialButton actionButton;
     MaterialButton listButton;
     ProgressBar progressBar;
     TextView songNameTextView;
     TextView songInfoTextView;
     ImageView albumArtImageView;
+    View panelView;
+
 
     Timer positionUpdateTimer = new Timer();
     TimerTask task;
@@ -62,7 +61,7 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        requestRead();
+
         //导航UI行为设定
         BottomNavigationView navView = findViewById(R.id.nav_view);
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity  {
         NavigationUI.setupWithNavController(navView, navController);
 
         //MusicPlayService服务创建
-        Intent intent = new Intent(this, MusicPlayService.class);
+        Intent intent = new Intent(this, MusicCoreService.class);
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         //底部音乐控制面板的各种绑定...
@@ -84,9 +83,12 @@ public class MainActivity extends AppCompatActivity  {
         songNameTextView = findViewById(R.id.player_panel_song_name);
         songInfoTextView = findViewById(R.id.player_panel_song_info);
         albumArtImageView = findViewById(R.id.player_panel_album_image);
+        panelView = findViewById(R.id.player_panel);
 
         actionButton.setOnClickListener(onActionButtonListener);
         listButton.setOnClickListener(onPlayListButtonListener);
+        panelView.setOnClickListener(onPanelViewListener);
+        songInfoTextView.setSelected(true);
 
         //外部调用的事件监听
         MusicPlayController playController = MusicPlayController.getMusicPlayController();
@@ -99,9 +101,9 @@ public class MainActivity extends AppCompatActivity  {
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicPlayService.MusicPlayServiceBinder binder = (MusicPlayService.MusicPlayServiceBinder)service;
-            MainActivity.this.musicPlayService = binder.getService();
-            musicPlayService.setOnCompletionListener(onCompletionListener);
+            MusicCoreService.MusicCoreServiceBinder binder = (MusicCoreService.MusicCoreServiceBinder)service;
+            MainActivity.this.musicCoreService = binder.getService();
+            musicCoreService.setOnCompletionListener(onCompletionListener);
         }
 
         @Override
@@ -120,11 +122,11 @@ public class MainActivity extends AppCompatActivity  {
             if (!noSongDataSource){
                 MaterialButton actionButton = (MaterialButton)v;
                 if (paused){
-                    musicPlayService.resumeMusic(lastPausePosition);
+                    musicCoreService.resumeMusic(lastPausePosition);
                     actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
                 }else{
-                    musicPlayService.pauseMusic();
-                    lastPausePosition = musicPlayService.getCurrentPosition();
+                    musicCoreService.pauseMusic();
+                    lastPausePosition = musicCoreService.getCurrentPosition();
                     actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
                 }
                 paused = !paused;
@@ -164,6 +166,7 @@ public class MainActivity extends AppCompatActivity  {
     private Observer<MusicInfo> onMusicChangeRequestListener = new Observer<MusicInfo>() {
         @Override
         public void onChanged(MusicInfo musicInfo) {
+            MainActivity.this.musicInfo = musicInfo;
             if (musicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
                 RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
                 new Thread(new Runnable() {
@@ -179,7 +182,16 @@ public class MainActivity extends AppCompatActivity  {
                                     albumArtImageView.setImageBitmap(bitmap);
                                 }
                             });
-                        }catch (IOException ignored) { Log.e("music panel", "download album art failed");}
+                        }catch (IOException ignored) {
+                            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    albumArtImageView.setImageBitmap(bitmap);
+                                }
+                            });
+                            Log.e("heimusic-music-panel", "download album art failed");
+                        }
                     }
                 }).start();
 
@@ -187,11 +199,12 @@ public class MainActivity extends AppCompatActivity  {
                 songInfoTextView.setText(remoteMusicInfo.getAlbumName() + " - " + remoteMusicInfo.getArtistName());
 
                 try{
-                    musicPlayService.playMusic(remoteMusicInfo.getUrlDataSrouce());
+                    musicCoreService.playMusic(remoteMusicInfo.getUrlDataSrouce());
                     actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
                     paused = false;
                     noSongDataSource = false;
                 }catch (IOException ignored){
+
                     Log.e("music panel", "play remote datasource failed");
                     return;
                 }
@@ -202,9 +215,12 @@ public class MainActivity extends AppCompatActivity  {
                 Bitmap albumArtBitmap=localMusicInfo.getAlbumArtBitmap();
                 if (albumArtBitmap != null){
                     albumArtImageView.setImageBitmap(albumArtBitmap);
+                }else{
+                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+                    albumArtImageView.setImageBitmap(bitmap);
                 }
                 try{
-                    musicPlayService.playMusic(MainActivity.this, localMusicInfo.getUriDataSource());
+                    musicCoreService.playMusic(MainActivity.this, localMusicInfo.getUriDataSource());
                     actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
                     paused = false;
                     noSongDataSource = false;
@@ -223,67 +239,22 @@ public class MainActivity extends AppCompatActivity  {
             task = new TimerTask() {
                 @Override
                 public void run() {
-                    progressBar.setMax(musicPlayService.getDuration());
-                    progressBar.setProgress(musicPlayService.getCurrentPosition());
+                    progressBar.setMax(musicCoreService.getDuration());
+                    progressBar.setProgress(musicCoreService.getCurrentPosition());
                 }
             };
             positionUpdateTimer.schedule(task,1,100);
         }
     };
 
-
-    /**
-     * permission code
-     */
-    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
-
-    /**
-     * requestPermissions and do something
-     *
-     */
-    public void requestRead() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-        } else {
-            readFile();
+    private View.OnClickListener onPanelViewListener = new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (!noSongDataSource){
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this, MusicDetailActivity.class);
+                    startActivity(intent);
+                }
         }
-    }
-
-    /**
-     * do you want to do
-     */
-    public void readFile() {
-        // do something
-    }
-
-    /**
-     * onRequestPermissionsResult
-     *
-     * @param requestCode
-     * @param permissions
-     * @param grantResults
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-        if (requestCode == MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                readFile();
-            } else {
-                // Permission Denied
-                Toast.makeText(MainActivity.this, "Permission Denied", Toast.LENGTH_SHORT).show();
-            }
-            return;
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    public class PermissionBase{
-
-    }
+    };
 }
