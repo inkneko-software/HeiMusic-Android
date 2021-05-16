@@ -19,6 +19,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -38,19 +39,15 @@ public class HomeFragment extends Fragment {
 
     private HomeViewModel homeViewModel;
     private ArrayList<MusicInfo> localMusicInfoList;
-    BaseAdapter adapter;
+    MusicBriefAdapter adapter;
     MusicCoreService musicCoreService;
     boolean firstTimePlay = true;
-    View lastPlayedItem = null;
+    boolean needScan = true;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_home, container, false);
-
-        //MusicPlayService服务创建
-        Intent intent = new Intent(getActivity(), MusicCoreService.class);
-        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         //自安卓6.0起敏感权限需要进一步动态申请
         //https://developer.android.com/training/permissions/requesting
@@ -59,8 +56,15 @@ public class HomeFragment extends Fragment {
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
         }else{
-            loadLocalMusicResources();
+            if (needScan = true){
+                loadLocalMusicResources();
+                needScan = false;
+            }
         }
+
+        //MusicPlayService服务创建
+        Intent intent = new Intent(getActivity(), MusicCoreService.class);
+        getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
         return root;
     }
 
@@ -75,7 +79,8 @@ public class HomeFragment extends Fragment {
 
     private void loadLocalMusicResources(){
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-
+        homeViewModel.getLocalMusicInfoList().getValue();
+        //TODO: fix concurrent issue on update datalist without notify the adapter
         homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
             @Override
             public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
@@ -131,26 +136,8 @@ public class HomeFragment extends Fragment {
 
         @Override
         public void onMusicChanged(MusicInfo newMusicInfo, int index) {
-            ListView listView = getView().findViewById(R.id.home_local_music_list);
-            View item = listView.getChildAt(index);
-            if (lastPlayedItem == null){
-                lastPlayedItem = item;
-                TextView songInfo = lastPlayedItem.findViewById(R.id.music_brief_item_songinfo);
-                TextView songName = item.findViewById(R.id.music_brief_item_songname);
-                defaultTextColor = songInfo.getCurrentTextColor();
-                songInfo.setTextColor(getContext().getColor(R.color.colorPrimary));
-                songName.setTextColor(getContext().getColor(R.color.colorPrimary));
-            }else if (lastPlayedItem != item){
-                TextView lastSongInfo = lastPlayedItem.findViewById(R.id.music_brief_item_songinfo);
-                TextView lastSongName = lastPlayedItem.findViewById(R.id.music_brief_item_songname);
-                lastSongInfo.setTextColor(defaultTextColor);
-                lastSongName.setTextColor(defaultTextColor);
-
-                TextView songInfo = item.findViewById(R.id.music_brief_item_songinfo);
-                TextView songName = item.findViewById(R.id.music_brief_item_songname);
-                songInfo.setTextColor(getContext().getColor(R.color.colorPrimary));
-                songName.setTextColor(getContext().getColor(R.color.colorPrimary));
-                lastPlayedItem = item;
+            if (adapter != null){
+                adapter.setHighLightItem(index);
             }
         }
 

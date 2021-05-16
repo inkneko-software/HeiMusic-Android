@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.inkneko.heimusic.MainActivity;
@@ -29,6 +30,10 @@ public class MusicBriefAdapter extends BaseAdapter {
     private Context context;
     List<MusicInfo> musicInfoList;
     private Bitmap defaultAlbumArt;
+    private int hightLightItemPoition = -1;
+    private View lastHighLightItem;
+    private ViewGroup bindedView;
+    private int defaultTextColor = 0;
 
     public MusicBriefAdapter(Context context, List<MusicInfo> musicInfoList){
         this.context = context;
@@ -54,6 +59,9 @@ public class MusicBriefAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        if (bindedView == null){
+            bindedView = parent;
+        }
         ViewHolder viewHolder = null;
         if (convertView == null){
             convertView = LayoutInflater.from(context).inflate(R.layout.layout_music_brief_item, parent, false);
@@ -62,6 +70,18 @@ public class MusicBriefAdapter extends BaseAdapter {
             viewHolder.songname = convertView.findViewById(R.id.music_brief_item_songname);
             viewHolder.songinfo = convertView.findViewById(R.id.music_brief_item_songinfo);
             convertView.setTag(viewHolder);
+            if (position == hightLightItemPoition){
+                if (lastHighLightItem == null){
+                    lastHighLightItem = convertView;
+                    defaultTextColor = viewHolder.songname.getCurrentTextColor();
+                }else{
+                    ViewHolder lastItemViewHolder = (ViewHolder)lastHighLightItem.getTag();
+                    lastItemViewHolder.songname.setTextColor(defaultTextColor);
+                    lastItemViewHolder.songinfo.setTextColor(defaultTextColor);
+                }
+                viewHolder.songname.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+                viewHolder.songinfo.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+            }
         }else{
             viewHolder = (ViewHolder)convertView.getTag();
         }
@@ -94,6 +114,29 @@ public class MusicBriefAdapter extends BaseAdapter {
             }).start();
         }
         return convertView;
+    }
+
+    public void setHighLightItem(int position){
+        hightLightItemPoition = position;
+        if (lastHighLightItem != null){
+            ViewHolder lastItemViewHolder = (ViewHolder)lastHighLightItem.getTag();
+            lastItemViewHolder.songname.setTextColor(defaultTextColor);
+            lastItemViewHolder.songinfo.setTextColor(defaultTextColor);
+        }
+        if (bindedView != null){
+            ListView listView = (ListView)bindedView;
+            int firstPosition = listView.getFirstVisiblePosition();
+            int lastPosition = listView.getLastVisiblePosition();
+            if (firstPosition  <= position && position <= lastPosition){
+                View item = listView.getChildAt(position - firstPosition);
+                ViewHolder itemViewHolder = (ViewHolder)item.getTag();
+                defaultTextColor = itemViewHolder.songname.getCurrentTextColor();
+                itemViewHolder.songname.setTextColor(listView.getContext().getColor(R.color.colorPrimary));
+                itemViewHolder.songinfo.setTextColor(listView.getContext().getColor(R.color.colorPrimary));
+                lastHighLightItem = item;
+            }
+        }
+
     }
 
     class ViewHolder{
