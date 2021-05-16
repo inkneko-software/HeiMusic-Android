@@ -1,16 +1,16 @@
-package com.inkneko.heimusic.ui.notifications;
+package com.inkneko.heimusic.ui.mymusic;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class NotificationsViewModel extends ViewModel {
+public class MyMusicViewModel extends ViewModel {
 
     private MutableLiveData<String> mText;
 
-    public NotificationsViewModel() {
+    public MyMusicViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is notifications fragment");
+        mText.setValue("This is mymusic fragment");
     }
 
     public LiveData<String> getText() {

@@ -1,4 +1,4 @@
-package com.inkneko.heimusic.ui.dashboard;
+package com.inkneko.heimusic.ui.mymusic;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,17 +14,17 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.inkneko.heimusic.R;
 
-public class DashboardFragment extends Fragment {
+public class MyMusicFragment extends Fragment {
 
-    private DashboardViewModel dashboardViewModel;
+    private MyMusicViewModel myMusicViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        dashboardViewModel =
-                ViewModelProviders.of(this).get(DashboardViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
+        myMusicViewModel =
+                ViewModelProviders.of(this).get(MyMusicViewModel.class);
+        View root = inflater.inflate(R.layout.fragment_mymusic, container, false);
         final TextView textView = root.findViewById(R.id.text_dashboard);
-        dashboardViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
+        myMusicViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 textView.setText(s);

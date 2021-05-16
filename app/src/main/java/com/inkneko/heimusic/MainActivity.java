@@ -20,7 +20,6 @@ import com.google.android.material.button.MaterialButton;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
-import com.inkneko.heimusic.service.MusicPlayController;
 import com.inkneko.heimusic.service.MusicCoreService;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,6 +31,8 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -42,8 +43,11 @@ public class MainActivity extends AppCompatActivity  {
     private MusicCoreService musicCoreService;
     private boolean noSongDataSource = true;
     private boolean paused = true;
+    private boolean stoped = true;
     private int lastPausePosition = 0;
 
+    private Bitmap defaltAlbumArt;
+    private ArrayList<MusicInfo> musicList;
     private MusicInfo musicInfo;
     MaterialButton actionButton;
     MaterialButton listButton;
@@ -76,7 +80,6 @@ public class MainActivity extends AppCompatActivity  {
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
         //底部音乐控制面板的各种绑定...
-        MusicPlayController musicPlayController = MusicPlayController.getMusicPlayController();
         actionButton = findViewById(R.id.player_panel_action_button);
         listButton = findViewById(R.id.player_panel_playlist_button);
         progressBar = findViewById(R.id.player_panel_progress_bar);
@@ -90,9 +93,7 @@ public class MainActivity extends AppCompatActivity  {
         panelView.setOnClickListener(onPanelViewListener);
         songInfoTextView.setSelected(true);
 
-        //外部调用的事件监听
-        MusicPlayController playController = MusicPlayController.getMusicPlayController();
-        playController.getCurrentPlayingMusic().observe(this, onMusicChangeRequestListener);
+        defaltAlbumArt = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
     }
 
     /**
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity  {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicCoreService.MusicCoreServiceBinder binder = (MusicCoreService.MusicCoreServiceBinder)service;
             MainActivity.this.musicCoreService = binder.getService();
-            musicCoreService.setOnCompletionListener(onCompletionListener);
+            musicCoreService.addOnStateChangeListener(onStateChangeListener);
         }
 
         @Override
@@ -120,16 +121,14 @@ public class MainActivity extends AppCompatActivity  {
         @Override
         public void onClick(View v) {
             if (!noSongDataSource){
-                MaterialButton actionButton = (MaterialButton)v;
                 if (paused){
-                    musicCoreService.resumeMusic(lastPausePosition);
-                    actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
+                    if (stoped){
+                        musicCoreService.seekTo(0);
+                    }
+                    musicCoreService.resumeMusic();
                 }else{
                     musicCoreService.pauseMusic();
-                    lastPausePosition = musicCoreService.getCurrentPosition();
-                    actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
                 }
-                paused = !paused;
             }
         }
     };
@@ -144,31 +143,27 @@ public class MainActivity extends AppCompatActivity  {
         }
     };
 
-    /**
-     * 播放完成的事件回调
-     */
-    private MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-            paused = true;
-            try{
-                if (task != null){
-                    task.cancel();
+    private View.OnClickListener onPanelViewListener = new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if (!noSongDataSource){
+                    Intent intent = new Intent();
+                    intent.setClass(MainActivity.this, MusicDetailActivity.class);
+                    startActivity(intent);
                 }
-            }catch (IllegalStateException ignored){}
-            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
         }
     };
 
-    /**
-     * 更换音乐请求的事件回调
-     */
-    private Observer<MusicInfo> onMusicChangeRequestListener = new Observer<MusicInfo>() {
+    private MusicCoreService.OnStateChangeListener onStateChangeListener = new MusicCoreService.OnStateChangeListener() {
         @Override
-        public void onChanged(MusicInfo musicInfo) {
-            MainActivity.this.musicInfo = musicInfo;
-            if (musicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
-                RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
+        public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
+            MainActivity.this.musicList = musicList;
+        }
+
+        @Override
+        public void onMusicChanged(MusicInfo newMusicInfo, int index) {
+            if (newMusicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
+                RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)newMusicInfo;
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -183,33 +178,22 @@ public class MainActivity extends AppCompatActivity  {
                                 }
                             });
                         }catch (IOException ignored) {
-                            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+
                             MainActivity.this.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    albumArtImageView.setImageBitmap(bitmap);
+                                    albumArtImageView.setImageBitmap(defaltAlbumArt);
                                 }
                             });
                             Log.e("heimusic-music-panel", "download album art failed");
                         }
                     }
                 }).start();
-
                 songNameTextView.setText(remoteMusicInfo.getSongName());
                 songInfoTextView.setText(remoteMusicInfo.getAlbumName() + " - " + remoteMusicInfo.getArtistName());
 
-                try{
-                    musicCoreService.playMusic(remoteMusicInfo.getUrlDataSrouce());
-                    actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
-                    paused = false;
-                    noSongDataSource = false;
-                }catch (IOException ignored){
-
-                    Log.e("music panel", "play remote datasource failed");
-                    return;
-                }
             }else { //否则是本地源
-                LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
+                LocalMusicInfo localMusicInfo = (LocalMusicInfo)newMusicInfo;
                 songNameTextView.setText(localMusicInfo.getSongName());
                 songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
                 Bitmap albumArtBitmap=localMusicInfo.getAlbumArtBitmap();
@@ -219,42 +203,42 @@ public class MainActivity extends AppCompatActivity  {
                     Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
                     albumArtImageView.setImageBitmap(bitmap);
                 }
-                try{
-                    musicCoreService.playMusic(MainActivity.this, localMusicInfo.getUriDataSource());
-                    actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
-                    paused = false;
-                    noSongDataSource = false;
-                }catch (IOException ignored){
-                    Log.e("music panel", "play local datasource failed");
-                    return;
-                }
             }
-
-            //播放位置更新的定时任务
-            try{
-                if (task != null){
-                    task.cancel();
-                }
-            }catch (IllegalStateException ignored){}
-            task = new TimerTask() {
-                @Override
-                public void run() {
-                    progressBar.setMax(musicCoreService.getDuration());
-                    progressBar.setProgress(musicCoreService.getCurrentPosition());
-                }
-            };
-            positionUpdateTimer.schedule(task,1,100);
+            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
+            paused = false;
+            stoped = false;
+            noSongDataSource = false;
         }
-    };
 
-    private View.OnClickListener onPanelViewListener = new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                if (!noSongDataSource){
-                    Intent intent = new Intent();
-                    intent.setClass(MainActivity.this, MusicDetailActivity.class);
-                    startActivity(intent);
-                }
+        @Override
+        public void onPaused() {
+            paused = true;
+            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
+        }
+
+        @Override
+        public void onStoped() {
+            paused = true;
+            stoped = true;
+            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
+        }
+
+        @Override
+        public void onResumed(MusicInfo resumeMusicInfo) {
+            paused = false;
+            stoped =false;
+            actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
+        }
+
+        @Override
+        public void onPositionChanged(int posotion, int duration) {
+            progressBar.setProgress(posotion);
+            progressBar.setMax(duration);
+        }
+
+        @Override
+        public void onPlayMethodChanged(int method) {
+            //ignored
         }
     };
 }
