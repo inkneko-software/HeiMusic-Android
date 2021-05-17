@@ -69,22 +69,12 @@ public class MusicBriefAdapter extends BaseAdapter {
             viewHolder.albumArt = convertView.findViewById(R.id.music_brief_item_album_art);
             viewHolder.songname = convertView.findViewById(R.id.music_brief_item_songname);
             viewHolder.songinfo = convertView.findViewById(R.id.music_brief_item_songinfo);
+            defaultTextColor = viewHolder.songname.getCurrentTextColor();
             convertView.setTag(viewHolder);
-            if (position == hightLightItemPoition){
-                if (lastHighLightItem == null){
-                    lastHighLightItem = convertView;
-                    defaultTextColor = viewHolder.songname.getCurrentTextColor();
-                }else{
-                    ViewHolder lastItemViewHolder = (ViewHolder)lastHighLightItem.getTag();
-                    lastItemViewHolder.songname.setTextColor(defaultTextColor);
-                    lastItemViewHolder.songinfo.setTextColor(defaultTextColor);
-                }
-                viewHolder.songname.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
-                viewHolder.songinfo.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
-            }
         }else{
             viewHolder = (ViewHolder)convertView.getTag();
         }
+
         MusicInfo musicInfo = musicInfoList.get(position);
         if (musicInfo instanceof LocalMusicInfo){
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
@@ -113,6 +103,32 @@ public class MusicBriefAdapter extends BaseAdapter {
                 }
             }).start();
         }
+        if (position == hightLightItemPoition) {
+            viewHolder.songname.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+            viewHolder.songinfo.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+            lastHighLightItem = convertView;
+        }else{
+            viewHolder.songname.setTextColor(defaultTextColor);
+            viewHolder.songinfo.setTextColor(defaultTextColor);
+        }
+        /*
+        if (position == hightLightItemPoition){
+            if (lastHighLightItem == null){
+                lastHighLightItem = convertView;
+                defaultTextColor = viewHolder.songname.getCurrentTextColor();
+            }else{
+                ViewHolder lastItemViewHolder = (ViewHolder)lastHighLightItem.getTag();
+                lastItemViewHolder.songname.setTextColor(defaultTextColor);
+                lastItemViewHolder.songinfo.setTextColor(defaultTextColor);
+            }
+            viewHolder.songname.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+            viewHolder.songinfo.setTextColor(parent.getContext().getColor(R.color.colorPrimary));
+        }
+
+        if(position != hightLightItemPoition && convertView == lastHighLightItem){
+            viewHolder.songname.setTextColor(defaultTextColor);
+            viewHolder.songinfo.setTextColor(defaultTextColor);
+        }*/
         return convertView;
     }
 
@@ -136,7 +152,6 @@ public class MusicBriefAdapter extends BaseAdapter {
                 lastHighLightItem = item;
             }
         }
-
     }
 
     class ViewHolder{
