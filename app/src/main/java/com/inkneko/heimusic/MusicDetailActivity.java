@@ -47,7 +47,7 @@ public class MusicDetailActivity extends AppCompatActivity {
     private boolean paused = true;
     private boolean stoped = true;
 
-    private int currentCompletionAction = 3;
+    private int currentCompletionAction = 0;
 
     private Button returnButton;
     private ImageView albumArtImageView;

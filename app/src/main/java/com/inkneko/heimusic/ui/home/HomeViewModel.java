@@ -21,25 +21,28 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.inkneko.heimusic.R;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Handler;
 
 
 public class HomeViewModel extends AndroidViewModel {
 
     private ArrayList<MusicInfo> localMusicInfoList;
     private MutableLiveData<ArrayList<MusicInfo>> mutableLocalMusicInfoList;
+    private Bitmap defaultAlbumArtBitmap;
 
     public HomeViewModel(Application application) {
         super(application);
         localMusicInfoList = new ArrayList<>();
         mutableLocalMusicInfoList = new MutableLiveData<>();
         mutableLocalMusicInfoList.setValue(localMusicInfoList);
-
+        defaultAlbumArtBitmap = BitmapFactory.decodeResource(getApplication().getResources(), R.drawable.default_albumart);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -93,8 +96,11 @@ public class HomeViewModel extends AndroidViewModel {
             try {
                 byte[] art = retriever.getEmbeddedPicture();
                 albumArtBitmap = BitmapFactory.decodeByteArray(art, 0, art.length);
+                if (albumArtBitmap == null){
+                    albumArtBitmap = defaultAlbumArtBitmap;
+                }
             } catch (Exception e) {
-                //TODO: add default art image
+                albumArtBitmap = defaultAlbumArtBitmap;
             }
             MusicInfo localMusicInfo = new LocalMusicInfo(songName,albumName,artistName,uriDataSource,albumArtBitmap);
             //去重

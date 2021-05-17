@@ -131,7 +131,7 @@
                 app:layout_constraintEnd_toStartOf="@id/music_detail_action_panel_switch_previous"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:icon="@drawable/ic_shuffle_black_24dp"
+                app:icon="@drawable/ic_playlist_add_check_black_24dp"
                 style="@style/MusicDetailPanelButtonStyle"
                 />
             <com.google.android.material.button.MaterialButton

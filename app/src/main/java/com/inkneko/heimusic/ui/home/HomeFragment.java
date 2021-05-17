@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -24,6 +25,9 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.inkneko.heimusic.MusicDetailActivity;
 import com.inkneko.heimusic.R;
@@ -31,6 +35,7 @@ import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
 import com.inkneko.heimusic.ui.adapter.MusicBriefAdapter;
+import com.inkneko.heimusic.ui.adapter.MusicBriefViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +48,8 @@ public class HomeFragment extends Fragment {
     MusicCoreService musicCoreService;
     boolean firstTimePlay = true;
     boolean needScan = true;
+    RecyclerView recyclerView;
+    MusicBriefViewHolder lastHighLightedViewHolder;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -79,17 +86,19 @@ public class HomeFragment extends Fragment {
 
     private void loadLocalMusicResources(){
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        homeViewModel.getLocalMusicInfoList().getValue();
         //TODO: fix concurrent issue on update datalist without notify the adapter
         homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
             @Override
             public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
                 if (localMusicInfoList == null){
-                    localMusicInfoList = localMusicInfos;
-                    ListView listView = getView().findViewById(R.id.home_local_music_list);
-                    listView.setOnItemClickListener(onItemClickListener);
-                    adapter = new MusicBriefAdapter(getContext(), localMusicInfos);
-                    listView.setAdapter(adapter);
+                    localMusicInfoList =  localMusicInfos;
+                    recyclerView = getView().findViewById(R.id.home_local_music_list);
+                    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),layoutManager.getOrientation()));
+                    adapter = new MusicBriefAdapter(new MusicBriefAdapter.MusicBriefDiff(), onItemClickListener);
+                    adapter.submitList(localMusicInfoList);
+                    recyclerView.setAdapter(adapter);
                 }else{
                     adapter.notifyDataSetChanged();
                 }
@@ -97,9 +106,9 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private ListView.OnItemClickListener onItemClickListener = new ListView.OnItemClickListener(){
+    private MusicBriefViewHolder.OnItemClickedListener onItemClickListener = new MusicBriefViewHolder.OnItemClickedListener() {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        public void onClicked(View view, int position) {
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)localMusicInfoList.get(position);
             if (firstTimePlay){
                 musicCoreService.playMusic(localMusicInfo, localMusicInfoList);
@@ -136,8 +145,16 @@ public class HomeFragment extends Fragment {
 
         @Override
         public void onMusicChanged(MusicInfo newMusicInfo, int index) {
-            if (adapter != null){
-                adapter.setHighLightItem(index);
+            if (recyclerView != null){
+                MusicBriefViewHolder viewHolder = (MusicBriefViewHolder) recyclerView.findViewHolderForAdapterPosition(index);
+                if (viewHolder != null){
+                    viewHolder.setItemViewHighLighted(true);
+                }
+                MusicBriefViewHolder.setSelectedPosition(index);
+                if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
+                    lastHighLightedViewHolder.setItemViewHighLighted(false);
+                }
+                lastHighLightedViewHolder = viewHolder;
             }
         }
 
