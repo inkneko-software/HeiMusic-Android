@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
@@ -16,16 +17,26 @@ import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
+import com.inkneko.heimusic.ui.adapter.PlayListAdapter;
+import com.inkneko.heimusic.ui.adapter.PlayListViewHolder;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -62,6 +73,8 @@ public class MusicDetailActivity extends AppCompatActivity {
     private MaterialButton playActionButton;
     private MaterialButton playListButton;
 
+    RecyclerView playlistRecyclerView ;
+    PlayListViewHolder lastHighLightedViewHolder;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -183,10 +196,48 @@ public class MusicDetailActivity extends AppCompatActivity {
     private View.OnClickListener onPlayListButtonClicked = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            //TODO: implement playlist view
+            if (musicList != null) {
+
+                DisplayMetrics displayMetrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                int height = displayMetrics.heightPixels;
+                int width = displayMetrics.widthPixels;
+
+                View contentView = LayoutInflater.from(MusicDetailActivity.this).inflate(R.layout.layout_playlist, null);
+                playlistRecyclerView = contentView.findViewById(R.id.playlist_list);
+                PlayListAdapter adapter = new PlayListAdapter(new PlayListAdapter.PlayListDiff(), onItemClickListener);
+                adapter.submitList(musicList);
+                LinearLayoutManager layoutManager = new LinearLayoutManager(MusicDetailActivity.this);
+                playlistRecyclerView.setLayoutManager(layoutManager);
+                playlistRecyclerView.addItemDecoration(new DividerItemDecoration(playlistRecyclerView.getContext(),layoutManager.getOrientation()));
+                playlistRecyclerView.setAdapter(adapter);
+                PopupWindow popWnd = new PopupWindow (MusicDetailActivity.this);
+                popWnd.setContentView(contentView);
+                popWnd.setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+                popWnd.setHeight(height/3*2);
+
+                popWnd.setFocusable(true);
+                popWnd.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+                popWnd.showAtLocation(MusicDetailActivity.this.findViewById(R.id.activity_music_detail_wrap), Gravity.BOTTOM, 0, 0);
+                popWnd.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        playlistRecyclerView = null;
+                    }
+                });
+            }
         }
     };
-    
+
+    private PlayListViewHolder.OnItemClickedListener onItemClickListener = new PlayListViewHolder.OnItemClickedListener() {
+        @Override
+        public void onClicked(View view, int position) {
+            LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicList.get(position);
+            musicCoreService.playMusic(localMusicInfo);
+        }
+    };
+
     private SeekBar.OnSeekBarChangeListener onSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -217,6 +268,7 @@ public class MusicDetailActivity extends AppCompatActivity {
             MusicCoreService.MusicCoreServiceBinder binder = (MusicCoreService.MusicCoreServiceBinder)service;
             MusicDetailActivity.this.musicCoreService = binder.getService();
             init(musicCoreService.getCurrentMusic(), musicCoreService.getCurrentPlaying());
+            musicList = musicCoreService.getCurrentPlayList();
             musicCoreService.addOnStateChangeListener(onStateChangeListener);
         }
 
@@ -295,6 +347,10 @@ public class MusicDetailActivity extends AppCompatActivity {
         @Override
         public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
             MusicDetailActivity.this.musicList = musicList;
+            if(playlistRecyclerView != null){
+                PlayListAdapter adapter =(PlayListAdapter) playlistRecyclerView.getAdapter();
+                adapter.submitList(musicList);
+            }
         }
 
         @Override

@@ -8,4 +8,5 @@
     <string name="player_panel_empty_info_title">HeiMusic for Android.</string>
     <string name="title_activity_music_detail">MusicDetailActivity</string>
     <string name="unknow_audio_duration">--:--</string>
+    <string name="title_playlist">播放列表</string>
 </resources>

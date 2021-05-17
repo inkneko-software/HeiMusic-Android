@@ -187,6 +187,7 @@ public class MusicCoreService extends Service {
     public void playMusic(MusicInfo musicInfo, ArrayList<MusicInfo> playList){
         musicList = playList;
         playMusic(musicInfo);
+        notifyMusicListChanged();
     }
 
     /**
@@ -254,6 +255,14 @@ public class MusicCoreService extends Service {
      */
     public MusicInfo getCurrentMusic(){
         return currentMusic;
+    }
+
+    /**
+     * 获取当前的播放列表
+     * @return 当前的播放列表，为空则为null
+     */
+    public ArrayList<MusicInfo> getCurrentPlayList(){
+        return musicList;
     }
 
     /**

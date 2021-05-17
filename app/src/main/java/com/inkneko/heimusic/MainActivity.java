@@ -6,12 +6,18 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.MediaPlayer;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -21,18 +27,22 @@ import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
+import com.inkneko.heimusic.ui.adapter.MusicBriefViewHolder;
+import com.inkneko.heimusic.ui.adapter.PlayListAdapter;
+import com.inkneko.heimusic.ui.adapter.PlayListViewHolder;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -57,7 +67,11 @@ public class MainActivity extends AppCompatActivity  {
     ImageView albumArtImageView;
     View panelView;
 
+    RecyclerView playlistRecyclerView ;
+    PlayListViewHolder lastHighLightedViewHolder;
 
+
+    boolean firstTimePlay = true;
     Timer positionUpdateTimer = new Timer();
     TimerTask task;
 
@@ -139,18 +153,56 @@ public class MainActivity extends AppCompatActivity  {
     private View.OnClickListener onPlayListButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            //TODO: add view
+            if (musicList != null) {
+                //TODO: 将popupWindow 更换为activity
+                DisplayMetrics displayMetrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                int height = displayMetrics.heightPixels;
+                int width = displayMetrics.widthPixels;
+
+                View contentView = LayoutInflater.from(MainActivity.this).inflate(R.layout.layout_playlist, null);
+                playlistRecyclerView = contentView.findViewById(R.id.playlist_list);
+                PlayListAdapter adapter = new PlayListAdapter(new PlayListAdapter.PlayListDiff(), onItemClickListener);
+                adapter.submitList(musicList);
+                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                playlistRecyclerView.setLayoutManager(layoutManager);
+                playlistRecyclerView.addItemDecoration(new DividerItemDecoration(playlistRecyclerView.getContext(),layoutManager.getOrientation()));
+                playlistRecyclerView.setAdapter(adapter);
+                PopupWindow popWnd = new PopupWindow (MainActivity.this);
+                popWnd.setContentView(contentView);
+                popWnd.setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+                popWnd.setHeight(height/3*2);
+
+                popWnd.setFocusable(true);
+                popWnd.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+
+                popWnd.showAtLocation(MainActivity.this.findViewById(R.id.activity_main), Gravity.BOTTOM, 0, 0);
+                popWnd.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        playlistRecyclerView = null;
+                    }
+                });
+            }
+        }
+    };
+
+    private PlayListViewHolder.OnItemClickedListener onItemClickListener = new PlayListViewHolder.OnItemClickedListener() {
+        @Override
+        public void onClicked(View view, int position) {
+            LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicList.get(position);
+                musicCoreService.playMusic(localMusicInfo);
         }
     };
 
     private View.OnClickListener onPanelViewListener = new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                if (!noSongDataSource){
-                    Intent intent = new Intent();
-                    intent.setClass(MainActivity.this, MusicDetailActivity.class);
-                    startActivity(intent);
-                }
+        @Override
+        public void onClick(View v) {
+            if (!noSongDataSource){
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, MusicDetailActivity.class);
+                startActivity(intent);
+            }
         }
     };
 
@@ -158,6 +210,10 @@ public class MainActivity extends AppCompatActivity  {
         @Override
         public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
             MainActivity.this.musicList = musicList;
+            if(playlistRecyclerView != null){
+                PlayListAdapter adapter =(PlayListAdapter) playlistRecyclerView.getAdapter();
+                adapter.submitList(musicList);
+            }
         }
 
         @Override
@@ -208,6 +264,18 @@ public class MainActivity extends AppCompatActivity  {
             paused = false;
             stoped = false;
             noSongDataSource = false;
+
+            PlayListViewHolder.setSelectedPosition(index);
+            if (playlistRecyclerView != null){
+                PlayListViewHolder viewHolder = (PlayListViewHolder) playlistRecyclerView.findViewHolderForAdapterPosition(index);
+                if (viewHolder != null){
+                    viewHolder.setItemViewHighLighted(true);
+                }
+                if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
+                    lastHighLightedViewHolder.setItemViewHighLighted(false);
+                }
+                lastHighLightedViewHolder = viewHolder;
+            }
         }
 
         @Override
