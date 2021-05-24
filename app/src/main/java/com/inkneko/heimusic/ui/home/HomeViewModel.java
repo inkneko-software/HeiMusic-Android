@@ -24,6 +24,9 @@ import androidx.lifecycle.ViewModel;
 import com.inkneko.heimusic.R;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
+import com.inkneko.heimusic.storage.localmusic.LocalMusic;
+import com.inkneko.heimusic.storage.localmusic.LocalMusicDao;
+import com.inkneko.heimusic.storage.localmusic.LocalMusicDatabase;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,13 +35,18 @@ import java.util.logging.Handler;
 
 
 public class HomeViewModel extends AndroidViewModel {
-
+    private LocalMusicDatabase localMusicDatabase;
     private ArrayList<MusicInfo> localMusicInfoList;
     private MutableLiveData<ArrayList<MusicInfo>> mutableLocalMusicInfoList;
     private Bitmap defaultAlbumArtBitmap;
+    private LocalMusicDao dao;
+
 
     public HomeViewModel(Application application) {
         super(application);
+        localMusicDatabase = LocalMusicDatabase.getInstance(application.getApplicationContext());
+        dao = localMusicDatabase.getDao();
+
         localMusicInfoList = new ArrayList<>();
         mutableLocalMusicInfoList = new MutableLiveData<>();
         mutableLocalMusicInfoList.setValue(localMusicInfoList);
@@ -46,49 +54,27 @@ public class HomeViewModel extends AndroidViewModel {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                scanAudioFiles();
+                loadAudioFiles();
             }
         }).start();
+    }
 
-
+    public LiveData<Integer> getCount(){
+        return dao.count();
     }
 
     public LiveData<ArrayList<MusicInfo>> getLocalMusicInfoList() {
         return mutableLocalMusicInfoList;
     }
 
-    private void scanAudioFiles(){
-        //使用MediaStore.Audio获取当前设备上的音频文件
-        //https://developer.android.com/guide/topics/providers/content-providers
-        //https://blog.csdn.net/yann02/article/details/92844364
-        ContentResolver resolver = getApplication().getApplicationContext().getContentResolver();
-        //这里认定大于一分钟的音频为音乐，以忽略掉系统铃声和其他的一些提示音效，因为使用IS_MUSIC字段在我的手机上不起作用，全都为0，支持太差
-        String selection = MediaStore.Audio.Media.DURATION + " > 60000";
-        String[] projection = {
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media._ID
-        };
+    private void loadAudioFiles(){
+        List<LocalMusic> musicList = dao.selectAll();
+        for(LocalMusic localMusic : musicList){
+            String songName = localMusic.getSongName();
+            String albumName = localMusic.getAlbumName();
+            String artistName = localMusic.getArtistName();
 
-        //TODO: use CursorLoader to load in the background
-        Cursor cursor = resolver.query(
-
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                null,
-                null);
-
-        while(cursor.moveToNext()){
-
-            String songName = cursor.getString(0);
-            String albumName = cursor.getString(1);
-            String artistName = cursor.getString(2);
-            String resourceId = cursor.getString(3);
-
-            Uri uriDataSource =  MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-            uriDataSource = Uri.withAppendedPath(uriDataSource, resourceId);
+            Uri uriDataSource =  Uri.parse(localMusic.getDataSourceUri());
 
             Bitmap albumArtBitmap = null;
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
@@ -109,7 +95,6 @@ public class HomeViewModel extends AndroidViewModel {
                 mutableLocalMusicInfoList.postValue(localMusicInfoList);
             }
         }
-        cursor.close();
     }
 
 }

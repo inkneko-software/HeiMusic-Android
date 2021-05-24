@@ -39,16 +39,16 @@ public class MusicBriefAdapter extends ListAdapter<MusicInfo, MusicBriefViewHold
     }
 
     public static class MusicBriefDiff extends DiffUtil.ItemCallback<MusicInfo>{
-            @Override
-            public boolean areItemsTheSame(@NonNull MusicInfo oldItem, @NonNull MusicInfo newItem) {
-                return oldItem == newItem;
-            }
-
-            @Override
-            public boolean areContentsTheSame(@NonNull MusicInfo oldItem, @NonNull MusicInfo newItem) {
-                return oldItem.equals(newItem);
-            }
+        @Override
+        public boolean areItemsTheSame(@NonNull MusicInfo oldItem, @NonNull MusicInfo newItem) {
+            return oldItem == newItem;
         }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull MusicInfo oldItem, @NonNull MusicInfo newItem) {
+            return oldItem.equals(newItem);
+        }
+    }
 
 
 }

@@ -20,4 +20,4 @@ public class LocalMusicInfo extends MusicInfo {
     public Bitmap getAlbumArtBitmap() {
         return albumArtBitmap;
     }
-    }
+}

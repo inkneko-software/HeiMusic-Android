@@ -24,14 +24,14 @@ import okhttp3.Request;
 
 public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
     private ImageView albumArtImageView;
-    TextView songNameTextView;
-    TextView songInfoTextView;
-    Bitmap defaultAlbumArtBitmap;
+    public TextView songNameTextView;
+    private TextView songInfoTextView;
+    private Bitmap defaultAlbumArtBitmap;
     private final View itemView;
-    private int defaultTextColor;
-    public static int selectedPosition = -1;
+    private final int defaultTextColor;
+    private static int selectedPosition = -1;
 
-    MusicBriefViewHolder(@NonNull View itemView) {
+    private MusicBriefViewHolder(@NonNull View itemView) {
         super(itemView);
         this.itemView = itemView;
         albumArtImageView = itemView.findViewById(R.id.music_brief_item_album_art);
@@ -89,6 +89,10 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
         selectedPosition = position;
     }
 
+    public static int  getSelectedPosition(){
+        return selectedPosition;
+    }
+
     public void setItemViewHighLighted(boolean dohighLight){
         if (dohighLight){
             songNameTextView.setTextColor(songNameTextView.getContext().getColor(R.color.colorPrimary));
@@ -99,7 +103,7 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    public static MusicBriefViewHolder create(ViewGroup parent) {
+    static MusicBriefViewHolder create(ViewGroup parent) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.layout_music_brief_item, parent, false);
         return new MusicBriefViewHolder(view);

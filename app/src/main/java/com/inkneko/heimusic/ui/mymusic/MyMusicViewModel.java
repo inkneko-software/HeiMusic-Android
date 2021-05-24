@@ -1,19 +1,33 @@
 package com.inkneko.heimusic.ui.mymusic;
 
+import android.app.Application;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+import android.provider.MediaStore;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class MyMusicViewModel extends ViewModel {
+import com.inkneko.heimusic.R;
+import com.inkneko.heimusic.entity.LocalMusicInfo;
+import com.inkneko.heimusic.entity.MusicInfo;
 
-    private MutableLiveData<String> mText;
+import java.util.ArrayList;
 
-    public MyMusicViewModel() {
-        mText = new MutableLiveData<>();
-        mText.setValue("This is mymusic fragment");
+public class MyMusicViewModel extends AndroidViewModel {
+    public MyMusicViewModel(Application application) {
+        super(application);
+
     }
 
-    public LiveData<String> getText() {
-        return mText;
-    }
+
+
+
+
 }

@@ -46,6 +46,9 @@ public class HomeFragment extends Fragment {
     private ArrayList<MusicInfo> localMusicInfoList;
     MusicBriefAdapter adapter;
     MusicCoreService musicCoreService;
+    TextView emptyNoticeTextView;
+
+    //设定当前播放列表是否为第一次播放，即MusicService中是否没有当前的音乐列表
     boolean firstTimePlay = true;
     boolean needScan = true;
     RecyclerView recyclerView;
@@ -55,19 +58,9 @@ public class HomeFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
 
         View root = inflater.inflate(R.layout.fragment_home, container, false);
+        emptyNoticeTextView = root.findViewById(R.id.home_fragment_notice_textview);
+        loadLocalMusicResources();
 
-        //自安卓6.0起敏感权限需要进一步动态申请
-        //https://developer.android.com/training/permissions/requesting
-        if (ContextCompat.checkSelfPermission(getContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }else{
-            if (needScan = true){
-                loadLocalMusicResources();
-                needScan = false;
-            }
-        }
 
         //MusicPlayService服务创建
         Intent intent = new Intent(getActivity(), MusicCoreService.class);
@@ -75,18 +68,20 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
-    private ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    loadLocalMusicResources();
-                } else {
-                    homeViewModel = null;
-                }
-            });
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+    }
 
     private void loadLocalMusicResources(){
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        //TODO: fix concurrent issue on update datalist without notify the adapter
+        homeViewModel.getCount().observe(getViewLifecycleOwner(), (count)->{
+            if (count != 0){
+                emptyNoticeTextView.setVisibility(View.GONE);
+            }
+        });
+
         homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
             @Override
             public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
@@ -146,15 +141,24 @@ public class HomeFragment extends Fragment {
         @Override
         public void onMusicChanged(MusicInfo newMusicInfo, int index) {
             if (recyclerView != null){
+                int selectedPos = MusicBriefViewHolder.getSelectedPosition();
+                if (selectedPos != -1){
+                    MusicBriefViewHolder selectedViewHolder = (MusicBriefViewHolder) recyclerView.findViewHolderForAdapterPosition(selectedPos);
+                    if (selectedViewHolder != null){
+                        selectedViewHolder.setItemViewHighLighted(false);
+                    }
+                }
+
                 MusicBriefViewHolder viewHolder = (MusicBriefViewHolder) recyclerView.findViewHolderForAdapterPosition(index);
                 if (viewHolder != null){
                     viewHolder.setItemViewHighLighted(true);
                 }
+
                 MusicBriefViewHolder.setSelectedPosition(index);
-                if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
+                /*if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
                     lastHighLightedViewHolder.setItemViewHighLighted(false);
                 }
-                lastHighLightedViewHolder = viewHolder;
+                lastHighLightedViewHolder = viewHolder;*/
             }
         }
 
@@ -183,4 +187,11 @@ public class HomeFragment extends Fragment {
             //ignored
         }
     };
+
+    @Override
+    public void onDestroyView() {
+        musicCoreService.removeOnStateChangeListener(onStateChangeListener);
+        super.onDestroyView();
+
+    }
 }
