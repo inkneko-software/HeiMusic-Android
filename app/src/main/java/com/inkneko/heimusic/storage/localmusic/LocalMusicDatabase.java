@@ -28,11 +28,4 @@ public abstract class LocalMusicDatabase extends RoomDatabase {
      * @return LocalMusicDao实例
      */
     public abstract LocalMusicDao getDao();
-
-
-    public void scanLocalFiles(){
-        LocalMusicDao dao = getDao();
-
-    }
-
 }

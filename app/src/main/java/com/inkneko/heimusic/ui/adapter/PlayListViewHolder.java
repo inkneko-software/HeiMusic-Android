@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -41,7 +40,7 @@ public class PlayListViewHolder extends RecyclerView.ViewHolder {
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
             songNameTextView.setText(localMusicInfo.getSongName());
             songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
-            Bitmap bitmap = localMusicInfo.getAlbumArtBitmap();
+            byte[] bitmap = localMusicInfo.getAlbumArtBytes();
         }else{
             RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
             songNameTextView.setText(remoteMusicInfo.getSongName());

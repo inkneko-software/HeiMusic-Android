@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -34,6 +36,7 @@ import com.inkneko.heimusic.R;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
+import com.inkneko.heimusic.storage.localmusic.LocalMusic;
 import com.inkneko.heimusic.ui.adapter.MusicBriefAdapter;
 import com.inkneko.heimusic.ui.adapter.MusicBriefViewHolder;
 
@@ -79,24 +82,32 @@ public class HomeFragment extends Fragment {
         homeViewModel.getCount().observe(getViewLifecycleOwner(), (count)->{
             if (count != 0){
                 emptyNoticeTextView.setVisibility(View.GONE);
-            }
-        });
-
-        homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
-            @Override
-            public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
-                if (localMusicInfoList == null){
-                    localMusicInfoList =  localMusicInfos;
-                    recyclerView = getView().findViewById(R.id.home_local_music_list);
-                    LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
-                    recyclerView.setLayoutManager(layoutManager);
-                    recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),layoutManager.getOrientation()));
-                    adapter = new MusicBriefAdapter(new MusicBriefAdapter.MusicBriefDiff(), onItemClickListener);
-                    adapter.submitList(localMusicInfoList);
-                    recyclerView.setAdapter(adapter);
-                }else{
-                    adapter.notifyDataSetChanged();
-                }
+                homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
+                    int lastSize = 0;
+                    @Override
+                    public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
+                        int updateNum = localMusicInfos.size() - lastSize;
+                        if (localMusicInfoList == null){
+                            localMusicInfoList =  localMusicInfos;
+                            recyclerView = getView().findViewById(R.id.home_local_music_list);
+                            LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+                            recyclerView.setLayoutManager(layoutManager);
+                            recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(),layoutManager.getOrientation()));
+                            adapter = new MusicBriefAdapter(new MusicBriefAdapter.MusicBriefDiff(), onItemClickListener);
+                            adapter.submitList(localMusicInfoList);
+                            recyclerView.setAdapter(adapter);
+                        }else{
+                            if (lastSize != 0){
+                                Log.i("adapter-seq", String.format("%d, %d", lastSize - 1, updateNum));
+                                adapter.notifyItemRangeChanged(lastSize - 1, updateNum);
+                            }else{
+                                Log.i("adapter-seq", String.format("%d, %d", 0, updateNum));
+                                adapter.notifyItemRangeChanged(0, updateNum);
+                            }
+                        }
+                        lastSize = localMusicInfos.size();
+                    }
+                });
             }
         });
     }
@@ -192,6 +203,10 @@ public class HomeFragment extends Fragment {
     public void onDestroyView() {
         musicCoreService.removeOnStateChangeListener(onStateChangeListener);
         super.onDestroyView();
-
+        for(MusicInfo info : localMusicInfoList){
+            if (info instanceof LocalMusicInfo){
+                ((LocalMusicInfo) info).onDestory();
+            }
+        }
     }
 }

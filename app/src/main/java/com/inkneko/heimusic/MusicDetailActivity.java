@@ -12,6 +12,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
@@ -288,27 +289,27 @@ public class MusicDetailActivity extends AppCompatActivity {
                 @Override
                 public void run() {
 
-                    try{
-                        OkHttpClient httpClient = new OkHttpClient();
-                        Request request = new Request.Builder().url(remoteMusicInfo.getAlbumArtUrl()).build();
-                        Bitmap albumArtBitmap = BitmapFactory.decodeStream(httpClient.newCall(request).execute().body().byteStream());
-                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                albumArtImageView.setImageBitmap(albumArtBitmap);
-                                setBlurBackground(albumArtBitmap);
-                            }
-                        });
-                    }catch (IOException ignored) {
-                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                albumArtImageView.setImageBitmap(defaultAlbumArt);
-                                setBlurBackground(defaultAlbumArt);
-                            }
-                        });
-                        Log.e("heimusic-MusicDetailActivity", "download album art failed");
-                    }
+//                    try{
+//                        OkHttpClient httpClient = new OkHttpClient();
+//                        Request request = new Request.Builder().url(remoteMusicInfo.getAlbumArtUrl()).build();
+//                        byte[] albumArtBitmap = BitmapFactory.decodeStream(httpClient.newCall(request).execute().body().byteStream());
+//                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                albumArtImageView.setImageBitmap(albumArtBitmap);
+//                                setBlurBackground(albumArtBitmap);
+//                            }
+//                        });
+//                    }catch (IOException ignored) {
+//                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                albumArtImageView.setImageBitmap(defaultAlbumArt);
+//                                setBlurBackground(defaultAlbumArt);
+//                            }
+//                        });
+//                        Log.e("heimusic-MusicDetailActivity", "download album art failed");
+//                    }
                 }
             }).start();
             songNameTextView.setText(remoteMusicInfo.getSongName());
@@ -318,14 +319,9 @@ public class MusicDetailActivity extends AppCompatActivity {
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
             songNameTextView.setText(localMusicInfo.getSongName());
             songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
-            Bitmap albumArtBitmap=localMusicInfo.getAlbumArtBitmap();
-            if (albumArtBitmap != null){
-                albumArtImageView.setImageBitmap(albumArtBitmap);
-            }else{
-                albumArtBitmap = defaultAlbumArt;
-                albumArtImageView.setImageBitmap(albumArtBitmap);
-            }
-            setBlurBackground(albumArtBitmap);
+            byte[] albumArtBytes =localMusicInfo.getAlbumArtBytes();
+            Glide.with(MusicDetailActivity.this).load(albumArtBytes).placeholder(R.drawable.default_albumart).into(albumArtImageView);
+            setBlurBackground(albumArtBytes);
         }
 
         if (isPlaying){
@@ -335,7 +331,8 @@ public class MusicDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void setBlurBackground(Bitmap preparedBitmap){
+    private void setBlurBackground(byte[] bytes){
+        Bitmap preparedBitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
         factor.height = preparedBitmap.getHeight();
         factor.width = preparedBitmap.getWidth();
         preparedBitmap = Blur.of(MusicDetailActivity.this,preparedBitmap, factor);

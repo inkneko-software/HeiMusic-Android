@@ -21,13 +21,13 @@ import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
-import com.inkneko.heimusic.ui.adapter.MusicBriefViewHolder;
 import com.inkneko.heimusic.ui.adapter.PlayListAdapter;
 import com.inkneko.heimusic.ui.adapter.PlayListViewHolder;
 
@@ -252,13 +252,8 @@ public class MainActivity extends AppCompatActivity  {
                 LocalMusicInfo localMusicInfo = (LocalMusicInfo)newMusicInfo;
                 songNameTextView.setText(localMusicInfo.getSongName());
                 songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
-                Bitmap albumArtBitmap=localMusicInfo.getAlbumArtBitmap();
-                if (albumArtBitmap != null){
-                    albumArtImageView.setImageBitmap(albumArtBitmap);
-                }else{
-                    Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-                    albumArtImageView.setImageBitmap(bitmap);
-                }
+                byte[] albumArtBytes=localMusicInfo.getAlbumArtBytes();
+                Glide.with(MainActivity.this).load(albumArtBytes).placeholder(R.drawable.default_albumart).into(albumArtImageView);
             }
             actionButton.setIcon(ContextCompat.getDrawable(MainActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
             paused = false;

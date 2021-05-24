@@ -2,7 +2,6 @@ package com.inkneko.heimusic.ui.adapter;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.inkneko.heimusic.R;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
@@ -26,7 +26,6 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
     private ImageView albumArtImageView;
     public TextView songNameTextView;
     private TextView songInfoTextView;
-    private Bitmap defaultAlbumArtBitmap;
     private final View itemView;
     private final int defaultTextColor;
     private static int selectedPosition = -1;
@@ -37,7 +36,6 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
         albumArtImageView = itemView.findViewById(R.id.music_brief_item_album_art);
         songNameTextView = itemView.findViewById(R.id.music_brief_item_songname);
         songInfoTextView = itemView.findViewById(R.id.music_brief_item_songinfo);
-        defaultAlbumArtBitmap = BitmapFactory.decodeResource(albumArtImageView.getResources(), R.drawable.default_albumart);
         defaultTextColor = songNameTextView.getCurrentTextColor();
     }
 
@@ -46,25 +44,13 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
             songNameTextView.setText(localMusicInfo.getSongName());
             songInfoTextView.setText(localMusicInfo.getAlbumName() + " - " + localMusicInfo.getArtistName());
-            Bitmap bitmap = localMusicInfo.getAlbumArtBitmap();
-            albumArtImageView.setImageBitmap(bitmap);
+            byte[] bitmap = localMusicInfo.getAlbumArtBytes();
+            Glide.with(albumArtImageView.getContext()).asBitmap().load(bitmap).placeholder(R.drawable.default_albumart).into(albumArtImageView);
         }else{
             RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
             songNameTextView.setText(remoteMusicInfo.getSongName());
             songInfoTextView.setText(remoteMusicInfo.getAlbumName() + " - " + remoteMusicInfo.getArtistName());
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try{
-                        OkHttpClient httpClient = new OkHttpClient();
-                        Request request = new Request.Builder().url(remoteMusicInfo.getAlbumArtUrl()).build();
-                        Bitmap bitmap = BitmapFactory.decodeStream(httpClient.newCall(request).execute().body().byteStream());
-                        albumArtImageView.setImageBitmap(bitmap);
-                    }catch (IOException ignored) {
-                        albumArtImageView.setImageBitmap(defaultAlbumArtBitmap);
-                    }
-                }
-            }).start();
+            Glide.with(albumArtImageView.getContext()).load(remoteMusicInfo.getAlbumArtUrl()).placeholder(R.drawable.default_albumart).into(albumArtImageView);
         }
 
         itemView.setOnClickListener(new View.OnClickListener() {
