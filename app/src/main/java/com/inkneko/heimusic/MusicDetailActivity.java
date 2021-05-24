@@ -332,7 +332,13 @@ public class MusicDetailActivity extends AppCompatActivity {
     }
 
     private void setBlurBackground(byte[] bytes){
-        Bitmap preparedBitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
+        Bitmap preparedBitmap;
+        if (bytes == null){
+            preparedBitmap = defaultAlbumArt;
+        }else{
+            preparedBitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
+
+        }
         factor.height = preparedBitmap.getHeight();
         factor.width = preparedBitmap.getWidth();
         preparedBitmap = Blur.of(MusicDetailActivity.this,preparedBitmap, factor);
