@@ -241,8 +241,8 @@ public class MusicDetailActivity extends AppCompatActivity {
     private PlayListViewHolder.OnItemClickedListener onItemClickListener = new PlayListViewHolder.OnItemClickedListener() {
         @Override
         public void onClicked(View view, int position) {
-            LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicList.get(position);
-            musicCoreService.playMusic(localMusicInfo);
+            MusicInfo musicInfo = musicList.get(position);
+            musicCoreService.playMusic(musicInfo);
         }
     };
 
