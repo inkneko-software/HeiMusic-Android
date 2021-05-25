@@ -2,6 +2,9 @@ package com.inkneko.heimusic.entity;
 
 import android.net.Uri;
 
+/**
+ * 本地音乐信息的定义
+ */
 public class LocalMusicInfo extends MusicInfo {
     private Uri uriDataSource;
     private byte[] albumArtBytes;
@@ -18,9 +21,5 @@ public class LocalMusicInfo extends MusicInfo {
 
     public byte[] getAlbumArtBytes() {
         return albumArtBytes;
-    }
-
-    public void onDestory(){
-        albumArtBytes = null;
     }
 }

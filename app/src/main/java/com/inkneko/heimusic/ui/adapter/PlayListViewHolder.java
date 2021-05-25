@@ -45,17 +45,6 @@ public class PlayListViewHolder extends RecyclerView.ViewHolder {
             RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
             songNameTextView.setText(remoteMusicInfo.getSongName());
             songInfoTextView.setText(remoteMusicInfo.getAlbumName() + " - " + remoteMusicInfo.getArtistName());
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try{
-                        OkHttpClient httpClient = new OkHttpClient();
-                        Request request = new Request.Builder().url(remoteMusicInfo.getAlbumArtUrl()).build();
-                        Bitmap bitmap = BitmapFactory.decodeStream(httpClient.newCall(request).execute().body().byteStream());
-                    }catch (IOException ignored) {
-                    }
-                }
-            }).start();
         }
 
         itemView.setOnClickListener(new View.OnClickListener() {

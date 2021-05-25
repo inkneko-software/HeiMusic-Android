@@ -10,6 +10,8 @@
     <string name="unknow_audio_duration">--:--</string>
     <string name="title_playlist">播放列表</string>
     <string name="home_fragment_empty_list_notice">当前列表为空，可在 [我的]-> [扫描本地音乐] 进行扫描</string>
-    <string name="mymusic_fragment_brief">墨猫音乐v1.0</string>
+    <string name="mymusic_fragment_version">墨猫音乐 v1.0</string>
+    <string name="mymusic_fragment_brief">当前扫描到的音乐数量：0</string>
     <string name="mymusic_fragment_scan_files">扫描本地音乐</string>
+    <string name = "mymusic_fragment_open_dir">打开音乐文件夹</string>
 </resources>

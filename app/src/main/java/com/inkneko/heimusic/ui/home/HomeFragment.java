@@ -47,15 +47,13 @@ public class HomeFragment extends Fragment {
 
     private HomeViewModel homeViewModel;
     private ArrayList<MusicInfo> localMusicInfoList;
-    MusicBriefAdapter adapter;
-    MusicCoreService musicCoreService;
-    TextView emptyNoticeTextView;
+    private MusicBriefAdapter adapter;
+    private MusicCoreService musicCoreService;
+    private TextView emptyNoticeTextView;
 
     //设定当前播放列表是否为第一次播放，即MusicService中是否没有当前的音乐列表
-    boolean firstTimePlay = true;
-    boolean needScan = true;
-    RecyclerView recyclerView;
-    MusicBriefViewHolder lastHighLightedViewHolder;
+    private boolean firstTimePlay = true;
+    private RecyclerView recyclerView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -74,7 +72,6 @@ public class HomeFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-
     }
 
     private void loadLocalMusicResources(){
@@ -98,10 +95,8 @@ public class HomeFragment extends Fragment {
                             recyclerView.setAdapter(adapter);
                         }else{
                             if (lastSize != 0){
-                                Log.i("adapter-seq", String.format("%d, %d", lastSize - 1, updateNum));
                                 adapter.notifyItemRangeChanged(lastSize - 1, updateNum);
                             }else{
-                                Log.i("adapter-seq", String.format("%d, %d", 0, updateNum));
                                 adapter.notifyItemRangeChanged(0, updateNum);
                             }
                         }
@@ -145,7 +140,7 @@ public class HomeFragment extends Fragment {
     private MusicCoreService.OnStateChangeListener onStateChangeListener = new MusicCoreService.OnStateChangeListener() {
         private int defaultTextColor = 0;
         @Override
-        public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
+        public void onMusicListChanged(List<MusicInfo> musicList) {
             //TODO dehighlight item
         }
 
@@ -166,10 +161,6 @@ public class HomeFragment extends Fragment {
                 }
 
                 MusicBriefViewHolder.setSelectedPosition(index);
-                /*if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
-                    lastHighLightedViewHolder.setItemViewHighLighted(false);
-                }
-                lastHighLightedViewHolder = viewHolder;*/
             }
         }
 
@@ -203,10 +194,5 @@ public class HomeFragment extends Fragment {
     public void onDestroyView() {
         musicCoreService.removeOnStateChangeListener(onStateChangeListener);
         super.onDestroyView();
-        for(MusicInfo info : localMusicInfoList){
-            if (info instanceof LocalMusicInfo){
-                ((LocalMusicInfo) info).onDestory();
-            }
-        }
     }
 }

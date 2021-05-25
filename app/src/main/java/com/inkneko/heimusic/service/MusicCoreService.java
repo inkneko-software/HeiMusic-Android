@@ -18,7 +18,7 @@ import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class MusicCoreService extends Service {
     //MediaPlayer实例
     private MediaPlayer mediaPlayer;
     //播放列表
-    private ArrayList<MusicInfo> musicList;
+    private List<MusicInfo> musicList;
     //当前播放的音乐
     private MusicInfo currentMusic;
     //当前播放的音乐在播放列表中的位置。下标从0开始
@@ -59,7 +59,7 @@ public class MusicCoreService extends Service {
         super.onCreate();
         mediaPlayer = new MediaPlayer();
         currentMusic = null;
-        musicList = new ArrayList<>();
+        musicList = new LinkedList<>();
         onStateChangeListenerList = new LinkedList<>();
         notifyProgressTimer = new Timer();
     }
@@ -184,7 +184,7 @@ public class MusicCoreService extends Service {
      * @param musicInfo
      * @param playList
      */
-    public void playMusic(MusicInfo musicInfo, ArrayList<MusicInfo> playList){
+    public void playMusic(MusicInfo musicInfo, List<MusicInfo> playList){
         musicList = playList;
         playMusic(musicInfo);
         notifyMusicListChanged();
@@ -261,7 +261,7 @@ public class MusicCoreService extends Service {
      * 获取当前的播放列表
      * @return 当前的播放列表，为空则为null
      */
-    public ArrayList<MusicInfo> getCurrentPlayList(){
+    public List<MusicInfo> getCurrentPlayList(){
         return musicList;
     }
 
@@ -421,7 +421,7 @@ public class MusicCoreService extends Service {
     };
 
     public interface OnStateChangeListener{
-        void onMusicListChanged(ArrayList<MusicInfo> musicList);
+        void onMusicListChanged(List<MusicInfo> musicList);
         void onMusicChanged(MusicInfo newMusicInfo, int index);
         void onPaused();
         void onStoped();

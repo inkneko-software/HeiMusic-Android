@@ -6,7 +6,7 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 /**
- * 音乐信息的定义。
+ * 音乐信息的基础定义。
  */
 public class MusicInfo {
     private String songName;

@@ -1,5 +1,8 @@
 package com.inkneko.heimusic.entity;
 
+/**
+ * 远程音乐信息的定义
+ */
 public class RemoteMusicInfo extends MusicInfo {
     private String urlDataSrouce;
     private String albumArtUrl;

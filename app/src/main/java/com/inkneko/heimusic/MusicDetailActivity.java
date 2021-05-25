@@ -13,6 +13,10 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.android.material.button.MaterialButton;
 import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
@@ -21,6 +25,7 @@ import com.inkneko.heimusic.service.MusicCoreService;
 import com.inkneko.heimusic.ui.adapter.PlayListAdapter;
 import com.inkneko.heimusic.ui.adapter.PlayListViewHolder;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -43,16 +48,15 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import jp.wasabeef.blurry.internal.Blur;
 import jp.wasabeef.blurry.internal.BlurFactor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 public class MusicDetailActivity extends AppCompatActivity {
 
     private MusicCoreService musicCoreService;
-    private ArrayList<MusicInfo> musicList;
+    private List<MusicInfo> musicList;
     private Bitmap defaultAlbumArt;
     private BlurFactor factor;
 
@@ -129,6 +133,9 @@ public class MusicDetailActivity extends AppCompatActivity {
         switchPrevButton.setOnClickListener(onPlayPrevButtonClicked);
         playListButton.setOnClickListener(onPlayListButtonClicked);
         seekBar.setOnSeekBarChangeListener(onSeekBarChangeListener);
+
+        songNameTextView.setSelected(true);
+        songInfoTextView.setSelected(true);
     }
 
     /**
@@ -285,33 +292,20 @@ public class MusicDetailActivity extends AppCompatActivity {
     private void init(MusicInfo musicInfo, boolean isPlaying) {
         if (musicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
             RemoteMusicInfo remoteMusicInfo = (RemoteMusicInfo)musicInfo;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
+            Glide.with(MusicDetailActivity.this).asBitmap().load(remoteMusicInfo.getAlbumArtUrl())
+                    .listener(new RequestListener<Bitmap>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                            return false;
+                        }
 
-//                    try{
-//                        OkHttpClient httpClient = new OkHttpClient();
-//                        Request request = new Request.Builder().url(remoteMusicInfo.getAlbumArtUrl()).build();
-//                        byte[] albumArtBitmap = BitmapFactory.decodeStream(httpClient.newCall(request).execute().body().byteStream());
-//                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                albumArtImageView.setImageBitmap(albumArtBitmap);
-//                                setBlurBackground(albumArtBitmap);
-//                            }
-//                        });
-//                    }catch (IOException ignored) {
-//                        MusicDetailActivity.this.runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                albumArtImageView.setImageBitmap(defaultAlbumArt);
-//                                setBlurBackground(defaultAlbumArt);
-//                            }
-//                        });
-//                        Log.e("heimusic-MusicDetailActivity", "download album art failed");
-//                    }
-                }
-            }).start();
+                        @Override
+                        public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                            setBlurBackground(resource);
+                            return false;
+                        }
+                    })
+                    .placeholder(R.drawable.default_albumart).into(albumArtImageView);
             songNameTextView.setText(remoteMusicInfo.getSongName());
             songInfoTextView.setText(remoteMusicInfo.getAlbumName() + " - " + remoteMusicInfo.getArtistName());
 
@@ -325,6 +319,8 @@ public class MusicDetailActivity extends AppCompatActivity {
         }
 
         if (isPlaying){
+            paused = false;
+            stoped =false;
             playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
         }else{
             playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
@@ -339,6 +335,10 @@ public class MusicDetailActivity extends AppCompatActivity {
             preparedBitmap = BitmapFactory.decodeByteArray(bytes,0, bytes.length);
 
         }
+        setBlurBackground(preparedBitmap);
+    }
+
+    private void setBlurBackground(Bitmap preparedBitmap){
         factor.height = preparedBitmap.getHeight();
         factor.width = preparedBitmap.getWidth();
         preparedBitmap = Blur.of(MusicDetailActivity.this,preparedBitmap, factor);
@@ -346,9 +346,10 @@ public class MusicDetailActivity extends AppCompatActivity {
         findViewById(R.id.activity_music_detail_wrap).setBackground(drawable);
     }
 
+
     private MusicCoreService.OnStateChangeListener onStateChangeListener = new MusicCoreService.OnStateChangeListener() {
         @Override
-        public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
+        public void onMusicListChanged(List<MusicInfo> musicList) {
             MusicDetailActivity.this.musicList = musicList;
             if(playlistRecyclerView != null){
                 PlayListAdapter adapter =(PlayListAdapter) playlistRecyclerView.getAdapter();
@@ -421,4 +422,9 @@ public class MusicDetailActivity extends AppCompatActivity {
         }
     };
 
+    @Override
+    protected void onDestroy() {
+        musicCoreService.removeOnStateChangeListener(onStateChangeListener);
+        super.onDestroy();
+    }
 }

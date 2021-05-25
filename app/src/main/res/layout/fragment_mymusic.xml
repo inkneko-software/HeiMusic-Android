@@ -4,12 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginStart="20dp"
-    android:layout_marginEnd="20dp"
-
-    >
+    android:layout_marginEnd="20dp">
 
     <TextView
-        android:id="@+id/mymusic_framgment_brief"
+        android:id="@+id/mymusic_fragment_version"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -19,20 +17,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/mymusic_fragment_version"
+        />
+
+    <TextView
+        android:id="@+id/mymusic_fragment_brief"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:textAlignment="textStart"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mymusic_fragment_version"
         android:text="@string/mymusic_fragment_brief"
         />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/mymusic_framgment_scan_button"
+        android:id="@+id/mymusic_fragment_scan_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/mymusic_fragment_scan_files"
         android:textAlignment="textStart"
-        app:layout_constraintTop_toBottomOf="@id/mymusic_framgment_brief"
+        app:layout_constraintTop_toBottomOf="@id/mymusic_fragment_brief"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:icon="@drawable/ic_search_black_24dp"/>
-        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

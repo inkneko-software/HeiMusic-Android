@@ -43,6 +43,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity  {
     private int lastPausePosition = 0;
 
     private Bitmap defaltAlbumArt;
-    private ArrayList<MusicInfo> musicList;
+    private List<MusicInfo> musicList;
     private MusicInfo musicInfo;
     MaterialButton actionButton;
     MaterialButton listButton;
@@ -190,7 +191,7 @@ public class MainActivity extends AppCompatActivity  {
     private PlayListViewHolder.OnItemClickedListener onItemClickListener = new PlayListViewHolder.OnItemClickedListener() {
         @Override
         public void onClicked(View view, int position) {
-            LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicList.get(position);
+            MusicInfo localMusicInfo = musicList.get(position);
                 musicCoreService.playMusic(localMusicInfo);
         }
     };
@@ -208,7 +209,7 @@ public class MainActivity extends AppCompatActivity  {
 
     private MusicCoreService.OnStateChangeListener onStateChangeListener = new MusicCoreService.OnStateChangeListener() {
         @Override
-        public void onMusicListChanged(ArrayList<MusicInfo> musicList) {
+        public void onMusicListChanged(List<MusicInfo> musicList) {
             MainActivity.this.musicList = musicList;
             if(playlistRecyclerView != null){
                 PlayListAdapter adapter =(PlayListAdapter) playlistRecyclerView.getAdapter();

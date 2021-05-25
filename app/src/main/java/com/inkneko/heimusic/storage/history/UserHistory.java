@@ -16,4 +16,5 @@ public abstract class UserHistory {
     public String lastAlbumName;
     public int lastDuration;
     public int lastPosition;
+    public int cachedCount;
 }

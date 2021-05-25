@@ -2,9 +2,10 @@ package com.inkneko.heimusic.ui.mymusic;
 
 import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,27 +13,36 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.material.button.MaterialButton;
 import com.inkneko.heimusic.R;
+import com.inkneko.heimusic.storage.localmusic.LocalMusicDatabase;
 import com.inkneko.heimusic.storage.localmusic.LocalMusicScanner;
 
 public class MyMusicFragment extends Fragment {
     private MyMusicViewModel myMusicViewModel;
+    private TextView briefTextView;
+    private SharedPreferences prefs;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         myMusicViewModel =
                 ViewModelProviders.of(this).get(MyMusicViewModel.class);
         View root = inflater.inflate(R.layout.fragment_mymusic, container, false);
-        MaterialButton scanButton = root.findViewById(R.id.mymusic_framgment_scan_button);
+        MaterialButton scanButton = root.findViewById(R.id.mymusic_fragment_scan_button);
         scanButton.setOnClickListener(onScanMusicClickedListener);
+
+        briefTextView = root.findViewById(R.id.mymusic_fragment_brief);
+        prefs = getActivity().getSharedPreferences(
+                "com.inkneko.heimusic", Context.MODE_PRIVATE);
+
+
+        int  count = prefs.getInt("cachedCount", 0);
+        briefTextView.setText(String.format("当前扫描到的音乐数量：%d", count));
         return root;
     }
 
@@ -69,6 +79,12 @@ public class MyMusicFragment extends Fragment {
         scanner.scan().observe(getViewLifecycleOwner(), (status)->{
             progressDialog.setProgress(status.first);
             progressDialog.setMax(status.second);
+            if (status.first.equals(status.second)){
+                progressDialog.setTitle("扫描完成");
+                prefs.edit().putInt("cachedCount", status.second).apply();
+                briefTextView.setText(String.format("当前扫描到的音乐数量：%d", status.second));
+            }
+
         });
     }
 }
