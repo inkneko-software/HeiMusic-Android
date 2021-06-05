@@ -1,5 +1,6 @@
 package com.inkneko.heimusic.ui.adapter;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
@@ -30,8 +31,14 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
     private TextView songInfoTextView;
     private CardView cardView;
     private final View itemView;
+    //保存默认的文字颜色
     private final int defaultTextColor;
+    //当前应当高亮的物品在列表中的索引
     private static int selectedPosition = -1;
+    //当前列表显示的专辑的id。如果当前展示的列表不是正在播放的，则不进行高亮
+    private static int selectedAlbumId = -1;
+    //当前正在播放的专辑id
+    private static int playingAlbumId = -1;
 
     private MusicBriefViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -43,6 +50,7 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
         defaultTextColor = songNameTextView.getCurrentTextColor();
     }
 
+    @SuppressLint("SetTextI18n")
     void bind(MusicInfo musicInfo, OnItemClickedListener onItemClickedListener, int position) {
         if (musicInfo instanceof LocalMusicInfo){
             LocalMusicInfo localMusicInfo = (LocalMusicInfo)musicInfo;
@@ -67,25 +75,13 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
         });
 
         //由于共用viewholder，保存高亮位置比较复杂，因此远程端音乐不进行高亮显示
-        if(selectedPosition == position && musicInfo instanceof LocalMusicInfo){
+        if(selectedPosition == position && musicInfo instanceof LocalMusicInfo && playingAlbumId == selectedAlbumId){
             setItemViewHighLighted(true);
         }else {
             setItemViewHighLighted(false);
         }
     }
-
-    public View getItemView(){
-        return itemView;
-    }
-
-    public static void setSelectedPosition(int position){
-        selectedPosition = position;
-    }
-
-    public static int  getSelectedPosition(){
-        return selectedPosition;
-    }
-
+    //设置物品高亮
     public void setItemViewHighLighted(boolean dohighLight){
         if (dohighLight){
             songNameTextView.setTextColor(songNameTextView.getContext().getColor(R.color.colorPrimary));
@@ -94,6 +90,18 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
             songNameTextView.setTextColor(defaultTextColor);
             songInfoTextView.setTextColor(defaultTextColor);
         }
+    }
+    //设置应当进行高亮的物品View在列表中的索引
+    public static void setSelectedPosition(int position){
+        selectedPosition = position;
+    }
+
+    public static int  getSelectedPosition(){
+        return selectedPosition;
+    }
+
+    public View getItemView(){
+        return itemView;
     }
 
     static MusicBriefViewHolder create(ViewGroup parent) {
@@ -105,5 +113,4 @@ public class MusicBriefViewHolder extends RecyclerView.ViewHolder {
     public interface OnItemClickedListener{
         void onClicked(View view, int position);
     }
-
 }
