@@ -85,7 +85,15 @@ public class MusicCoreService extends Service {
         }
     }
 
-
+    public interface OnStateChangeListener{
+        void onMusicListChanged(List<MusicInfo> musicList);
+        void onMusicChanged(MusicInfo newMusicInfo, int index);
+        void onPaused();
+        void onStoped();
+        void onResumed(MusicInfo resumeMusicInfo);
+        void onPositionChanged(int posotion, int duration);
+        void onPlayMethodChanged(int method);
+    }
 
     /**
      * 添加播放状态的监听器
@@ -244,9 +252,17 @@ public class MusicCoreService extends Service {
      * 设定播放顺序模式
      * @param method 模式，默认为顺序播放，1为单曲循环，2为列表循环，3为随机播放
      */
-    public void setPlayMothod(int method){
+    public void setPlayMethod(int method){
         onCompleteAction = method;
         notifyPlayMethodChanged(method);
+    }
+
+    /**
+     * 获取当前的播放模式
+     * @return 当前的播放模式
+     */
+    public int getPlayMethod(){
+        return onCompleteAction;
     }
 
     /**
@@ -420,13 +436,5 @@ public class MusicCoreService extends Service {
         }
     };
 
-    public interface OnStateChangeListener{
-        void onMusicListChanged(List<MusicInfo> musicList);
-        void onMusicChanged(MusicInfo newMusicInfo, int index);
-        void onPaused();
-        void onStoped();
-        void onResumed(MusicInfo resumeMusicInfo);
-        void onPositionChanged(int posotion, int duration);
-        void onPlayMethodChanged(int method);
-    }
+
 }

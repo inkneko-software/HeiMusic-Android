@@ -1,5 +1,6 @@
 package com.inkneko.heimusic;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ import com.inkneko.heimusic.entity.LocalMusicInfo;
 import com.inkneko.heimusic.entity.MusicInfo;
 import com.inkneko.heimusic.entity.RemoteMusicInfo;
 import com.inkneko.heimusic.service.MusicCoreService;
+import com.inkneko.heimusic.ui.adapter.MusicBriefViewHolder;
 import com.inkneko.heimusic.ui.adapter.PlayListAdapter;
 import com.inkneko.heimusic.ui.adapter.PlayListViewHolder;
 
@@ -34,20 +36,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.IBinder;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import jp.wasabeef.blurry.internal.Blur;
@@ -194,7 +194,7 @@ public class MusicDetailActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             currentCompletionAction = (currentCompletionAction + 1) % 4;
-            musicCoreService.setPlayMothod(currentCompletionAction);
+            musicCoreService.setPlayMethod(currentCompletionAction);
         }
     };
 
@@ -227,16 +227,28 @@ public class MusicDetailActivity extends AppCompatActivity {
                 popWnd.setFocusable(true);
                 popWnd.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
 
+                setWindowBackgroundAlpha(0.6f);
                 popWnd.showAtLocation(MusicDetailActivity.this.findViewById(R.id.activity_music_detail_wrap), Gravity.BOTTOM, 0, 0);
                 popWnd.setOnDismissListener(new PopupWindow.OnDismissListener() {
                     @Override
                     public void onDismiss() {
                         playlistRecyclerView = null;
+                        setWindowBackgroundAlpha(1f);
                     }
                 });
             }
         }
     };
+
+    private void setWindowBackgroundAlpha(float alpha) {
+        Context mContext = MusicDetailActivity.this;
+        if (mContext instanceof Activity) {
+            Window window = ((Activity) mContext).getWindow();
+            WindowManager.LayoutParams layoutParams = window.getAttributes();
+            layoutParams.alpha = alpha;
+            window.setAttributes(layoutParams);
+        }
+    }
 
     private PlayListViewHolder.OnItemClickedListener onItemClickListener = new PlayListViewHolder.OnItemClickedListener() {
         @Override
@@ -278,6 +290,7 @@ public class MusicDetailActivity extends AppCompatActivity {
             init(musicCoreService.getCurrentMusic(), musicCoreService.getCurrentPlaying());
             musicList = musicCoreService.getCurrentPlayList();
             musicCoreService.addOnStateChangeListener(onStateChangeListener);
+            onStateChangeListener.onPlayMethodChanged(musicCoreService.getPlayMethod());
         }
 
         @Override
@@ -358,34 +371,6 @@ public class MusicDetailActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onMusicChanged(MusicInfo newMusicInfo, int index) {
-            init(newMusicInfo, true);
-            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
-            paused = false;
-            stoped = false;
-        }
-
-        @Override
-        public void onPaused() {
-            paused = true;
-            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
-        }
-
-        @Override
-        public void onStoped() {
-            paused = true;
-            stoped = true;
-            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
-        }
-
-        @Override
-        public void onResumed(MusicInfo resumeMusicInfo) {
-            paused = false;
-            stoped =false;
-            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
-        }
-
-        @Override
         public void onPositionChanged(int position, int duration) {
             seekBar.setProgress(position);
             seekBar.setMax(duration);
@@ -420,6 +405,48 @@ public class MusicDetailActivity extends AppCompatActivity {
             }
             playMethodButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, drawbleId));
         }
+
+        @Override
+        public void onMusicChanged(MusicInfo newMusicInfo, int index) {
+            init(newMusicInfo, true);
+            MusicBriefViewHolder.setSelectedPosition(index);
+            PlayListViewHolder.setSelectedPosition(index);
+            if (playlistRecyclerView != null){
+                PlayListViewHolder viewHolder = (PlayListViewHolder) playlistRecyclerView.findViewHolderForAdapterPosition(index);
+                if (viewHolder != null){
+                    viewHolder.setItemViewHighLighted(true);
+                }
+                if (lastHighLightedViewHolder != null && lastHighLightedViewHolder != viewHolder){
+                    lastHighLightedViewHolder.setItemViewHighLighted(false);
+                }
+                lastHighLightedViewHolder = viewHolder;
+            }
+            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
+            paused = false;
+            stoped = false;
+        }
+
+        @Override
+        public void onPaused() {
+            paused = true;
+            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
+        }
+
+        @Override
+        public void onStoped() {
+            paused = true;
+            stoped = true;
+            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_play_circle_outline_black_24dp));
+        }
+
+        @Override
+        public void onResumed(MusicInfo resumeMusicInfo) {
+            paused = false;
+            stoped =false;
+            playActionButton.setIcon(ContextCompat.getDrawable(MusicDetailActivity.this, R.drawable.ic_pause_circle_outline_black_24dp));
+        }
+
+
     };
 
     @Override
