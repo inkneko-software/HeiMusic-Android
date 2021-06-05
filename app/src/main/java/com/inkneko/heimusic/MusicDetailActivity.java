@@ -105,9 +105,10 @@ public class MusicDetailActivity extends AppCompatActivity {
         factor = new BlurFactor();
         factor.radius = 20;
         factor.sampling = 5;
+        factor.color = Color.argb(70, 0, 0, 0);
+
         factor.height = defaultAlbumArt.getHeight();
         factor.width = defaultAlbumArt.getWidth();
-        factor.color = Color.argb(70, 0, 0, 0);
         //https://github.com/wasabeef/Blurry/issues/26
         Bitmap algorithmInit = Blur.of(MusicDetailActivity.this,defaultAlbumArt, factor); //在魅族pro6plus上需要预先加载一遍，否则会花屏
         algorithmInit = null;
@@ -352,6 +353,13 @@ public class MusicDetailActivity extends AppCompatActivity {
     }
 
     private void setBlurBackground(Bitmap preparedBitmap){
+        factor = new BlurFactor();
+        //模糊笔刷半径
+        factor.radius = 20;
+        //采样率
+        factor.sampling = 5;
+        //透明度和模糊基色，设定为不透明度70%，基色为黑色
+        factor.color = Color.argb(70, 0, 0, 0);
         factor.height = preparedBitmap.getHeight();
         factor.width = preparedBitmap.getWidth();
         preparedBitmap = Blur.of(MusicDetailActivity.this,preparedBitmap, factor);

@@ -1,5 +1,7 @@
 package com.inkneko.heimusic;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +18,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
@@ -176,12 +180,13 @@ public class MainActivity extends AppCompatActivity  {
 
                 popWnd.setFocusable(true);
                 popWnd.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
-
+                setWindowBackgroundAlpha(0.6f);
                 popWnd.showAtLocation(MainActivity.this.findViewById(R.id.activity_main), Gravity.BOTTOM, 0, 0);
                 popWnd.setOnDismissListener(new PopupWindow.OnDismissListener() {
                     @Override
                     public void onDismiss() {
                         playlistRecyclerView = null;
+                        setWindowBackgroundAlpha(1f);
                     }
                 });
             }
@@ -217,6 +222,7 @@ public class MainActivity extends AppCompatActivity  {
             }
         }
 
+        @SuppressLint("SetTextI18n")
         @Override
         public void onMusicChanged(MusicInfo newMusicInfo, int index) {
             if (newMusicInfo instanceof RemoteMusicInfo){ //如果音乐是远端源
@@ -305,4 +311,14 @@ public class MainActivity extends AppCompatActivity  {
             //ignored
         }
     };
+
+    private void setWindowBackgroundAlpha(float alpha) {
+        Context mContext = MainActivity.this;
+        if (mContext instanceof Activity) {
+            Window window = ((Activity) mContext).getWindow();
+            WindowManager.LayoutParams layoutParams = window.getAttributes();
+            layoutParams.alpha = alpha;
+            window.setAttributes(layoutParams);
+        }
+    }
 }
