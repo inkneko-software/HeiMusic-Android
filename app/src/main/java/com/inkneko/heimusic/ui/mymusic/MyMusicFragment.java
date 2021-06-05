@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -66,6 +67,8 @@ public class MyMusicFragment extends Fragment {
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     doScan();
+                }else{
+                    Toast toast = Toast.makeText(getContext(), "请开启本地存储权限", Toast.LENGTH_LONG);
                 }
             });
 
