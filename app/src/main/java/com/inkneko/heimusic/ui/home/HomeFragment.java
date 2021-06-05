@@ -60,12 +60,13 @@ public class HomeFragment extends Fragment {
 
         View root = inflater.inflate(R.layout.fragment_home, container, false);
         emptyNoticeTextView = root.findViewById(R.id.home_fragment_notice_textview);
-        loadLocalMusicResources();
-
 
         //MusicPlayService服务创建
         Intent intent = new Intent(getActivity(), MusicCoreService.class);
         getActivity().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        //加载本地音乐列表
+        loadLocalMusicResources();
         return root;
     }
 
@@ -78,6 +79,7 @@ public class HomeFragment extends Fragment {
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         homeViewModel.getCount().observe(getViewLifecycleOwner(), (count)->{
             if (count != 0){
+                //有数据源，则取消提示无音乐数据的TextView显示
                 emptyNoticeTextView.setVisibility(View.GONE);
                 homeViewModel.getLocalMusicInfoList().observe(getViewLifecycleOwner(), new Observer<ArrayList<MusicInfo>>() {
                     int lastSize = 0;
@@ -85,6 +87,7 @@ public class HomeFragment extends Fragment {
                     public void onChanged(ArrayList<MusicInfo> localMusicInfos) {
                         int updateNum = localMusicInfos.size() - lastSize;
                         if (localMusicInfoList == null){
+                            //音乐列表初次加载的设置逻辑，包括Adapter的创建，RecyclerView的属性设定
                             localMusicInfoList =  localMusicInfos;
                             recyclerView = getView().findViewById(R.id.home_local_music_list);
                             LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
@@ -94,6 +97,7 @@ public class HomeFragment extends Fragment {
                             adapter.submitList(localMusicInfoList);
                             recyclerView.setAdapter(adapter);
                         }else{
+                            //如果非首次加载，则通过ListAdapter提供的更新部分数据的功能以显示动画渐变效果
                             if (lastSize != 0){
                                 adapter.notifyItemRangeChanged(lastSize - 1, updateNum);
                             }else{

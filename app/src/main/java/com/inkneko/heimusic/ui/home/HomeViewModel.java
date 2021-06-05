@@ -27,7 +27,6 @@ public class HomeViewModel extends AndroidViewModel {
     private MutableLiveData<ArrayList<MusicInfo>> mutableLocalMusicInfoList;
     private LocalMusicDao dao;
 
-
     public HomeViewModel(Application application) {
         super(application);
         localMusicDatabase = LocalMusicDatabase.getInstance(application.getApplicationContext());
@@ -39,16 +38,24 @@ public class HomeViewModel extends AndroidViewModel {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                //fixme: memory leak
+                //异步加载音乐列表
                 loadAudioFiles();
             }
         }).start();
     }
 
+    /**
+     * 获取当前本地数据库中已扫描到多少首音乐
+     * @return
+     */
     public LiveData<Integer> getCount(){
         return dao.count();
     }
 
+    /**
+     * 获得音乐列表的MutableLiveData对象，用户通过调用该对象的observe方法以实现异步加载列表
+     * @return
+     */
     public LiveData<ArrayList<MusicInfo>> getLocalMusicInfoList() {
         return mutableLocalMusicInfoList;
     }
@@ -63,20 +70,20 @@ public class HomeViewModel extends AndroidViewModel {
             Uri uriDataSource =  Uri.parse(localMusic.getDataSourceUri());
 
             byte[] albumArtBitmap = null;
+            //用于获取本地音乐文件的专辑封面图片
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
             try {
                 retriever.setDataSource(getApplication().getApplicationContext(), uriDataSource);
                 albumArtBitmap = retriever.getEmbeddedPicture();
-            } catch (Exception e) {
-                albumArtBitmap = null;
-            }finally {
+            } catch (Exception ignored) {
+
+            } finally {
                 retriever.release();
             }
             MusicInfo localMusicInfo = new LocalMusicInfo(songName,albumName,artistName,uriDataSource,albumArtBitmap);
             localMusicInfoList.add(localMusicInfo);
+            //通知内容发送改变
             mutableLocalMusicInfoList.postValue(localMusicInfoList);
-            albumArtBitmap = null;
         }
     }
-
 }
