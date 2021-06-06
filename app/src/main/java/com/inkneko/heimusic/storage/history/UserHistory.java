@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 /**
  * 用户历史记录的定义。
  * 实际的读取请使用getSharedPreference，键名为以下的变量名
+ * 暂时只实现了cachedCount的保存
  */
 public abstract class UserHistory {
     public int playMethod;
